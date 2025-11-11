@@ -43,7 +43,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F2E2C4] pb-20">
+    <div className="h-full w-full">
       <h1 className="pt-6 text-center font-bold text-[#2A190F] text-xl md:text-3xl">
         Dashboard
       </h1>
