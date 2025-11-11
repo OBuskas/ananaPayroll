@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { Geist, Geist_Mono, Jersey_25 } from "next/font/google";
 import type React from "react";
 import "./globals.css";
+import Footer from "@/components/footer";
+import Header from "@/components/header";
 import Web3AuthWrapper from "@/context/web3auth";
 
 export const metadata: Metadata = {
   title: "Ananá Payroll - Web3 Payroll Automation",
   description:
     "Build trust between employers and employees through transparent smart contracts. Automate payments, earn yield, and revolutionize payroll with blockchain technology.",
-  generator: "v0.app",
   icons: {
     icon: [
       {
@@ -27,6 +29,14 @@ export const metadata: Metadata = {
   },
 };
 
+const geist = Geist({ subsets: ["latin"] });
+const geistMono = Geist_Mono({ subsets: ["latin"] });
+const jersey25 = Jersey_25({
+  variable: "--font-jersey25",
+  subsets: ["latin"],
+  weight: "400",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,8 +44,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={"font-sans antialiased"}>
-        <Web3AuthWrapper>{children}</Web3AuthWrapper>
+      <body
+        className={`${geist.className} ${geistMono.className} ${jersey25.variable} antialiased`}
+      >
+        <Web3AuthWrapper>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+
+            <main className="flex-1">{children}</main>
+
+            <Footer />
+          </div>
+        </Web3AuthWrapper>
       </body>
     </html>
   );
