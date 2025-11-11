@@ -1,4 +1,9 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function FAQSection() {
   const faqs = [
@@ -32,32 +37,38 @@ export default function FAQSection() {
       answer:
         "Simply sign up, create your company profile, add employees, and lock your first payroll funds. The entire process takes less than 10 minutes.",
     },
-  ]
+  ];
 
   return (
     <section className="bg-[#F2E2C4] py-20">
       <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#2A190F] mb-4">Frequently Asked Questions</h2>
-            <p className="text-lg text-[#2A190F]/70">Everything you need to know about Ananá Payroll</p>
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-[#2A190F]/70 text-lg">
+              Everything you need to know about Ananá Payroll
+            </p>
           </div>
-          <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq, index) => (
+          <Accordion className="space-y-4" collapsible type="single">
+            {faqs.map((faq) => (
               <AccordionItem
-                key={index}
-                value={`item-${index}`}
-                className="bg-white rounded-2xl border-[#2A190F]/10 px-6"
+                className="rounded-2xl border-[#2A190F]/10 bg-white px-6"
+                key={faq.question}
+                value={`item-${faq.question}`}
               >
-                <AccordionTrigger className="text-left text-[#2A190F] font-semibold hover:no-underline">
+                <AccordionTrigger className="text-left font-semibold text-[#2A190F] hover:no-underline">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-[#2A190F]/70 leading-relaxed">{faq.answer}</AccordionContent>
+                <AccordionContent className="text-[#2A190F]/70 leading-relaxed">
+                  {faq.answer}
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
         </div>
       </div>
     </section>
-  )
+  );
 }

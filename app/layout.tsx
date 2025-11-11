@@ -1,11 +1,7 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
-import "./globals.css"
-
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+import type { Metadata } from "next";
+import type React from "react";
+import "./globals.css";
+import Web3AuthWrapper from "@/context/web3auth";
 
 export const metadata: Metadata = {
   title: "Ananá Payroll - Web3 Payroll Automation",
@@ -29,19 +25,18 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
-        {children}
-        <Analytics />
+      <body className={"font-sans antialiased"}>
+        <Web3AuthWrapper>{children}</Web3AuthWrapper>
       </body>
     </html>
-  )
+  );
 }

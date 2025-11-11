@@ -1,84 +1,96 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function EmployeeLoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Simulate login - in production, integrate with your auth system
-    router.push("/employee/dashboard")
-  }
+    router.push("/employee/dashboard");
+  };
 
   return (
-    <div className="min-h-screen bg-[#F2E2C4] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white/50 backdrop-blur border-[#2A190F]/20">
+    <div className="flex min-h-screen items-center justify-center bg-[#F2E2C4] p-4">
+      <Card className="w-full max-w-md border-[#2A190F]/20 bg-white/50 backdrop-blur">
         <CardHeader className="space-y-1 text-center">
-          <Link href="/" className="flex justify-center mb-4">
+          <Link className="mb-4 flex justify-center" href="/">
             <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pina-po0AP8bgiOjirYHeqCSaqKPKflcLOy.png"
               alt="Piña mascot"
-              width={80}
-              height={80}
               className="h-20 w-20"
+              height={80}
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pina-po0AP8bgiOjirYHeqCSaqKPKflcLOy.png"
+              width={80}
             />
           </Link>
-          <CardTitle className="text-2xl font-bold text-[#2A190F]">Employee Login</CardTitle>
-          <CardDescription className="text-[#2A190F]/70">Access your payment history and documents</CardDescription>
+          <CardTitle className="font-bold text-2xl text-[#2A190F]">
+            Employee Login
+          </CardTitle>
+          <CardDescription className="text-[#2A190F]/70">
+            Access your payment history and documents
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form className="space-y-4" onSubmit={handleLogin}>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#2A190F]">
+              <Label className="text-[#2A190F]" htmlFor="email">
                 Email
               </Label>
               <Input
+                className="border-[#2A190F]/20 bg-white"
                 id="email"
-                type="email"
-                placeholder="employee@company.com"
-                value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="employee@company.com"
                 required
-                className="bg-white border-[#2A190F]/20"
+                type="email"
+                value={email}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-[#2A190F]">
+              <Label className="text-[#2A190F]" htmlFor="password">
                 Password
               </Label>
               <Input
+                className="border-[#2A190F]/20 bg-white"
                 id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
                 required
-                className="bg-white border-[#2A190F]/20"
+                type="password"
+                value={password}
               />
             </div>
             <Button
+              className="w-full bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
               type="submit"
-              className="w-full bg-[#FCBA2E] hover:bg-[#F1C644] text-[#2A190F] font-semibold shadow-[0_4px_0_0_#DD840E]"
             >
               Login
             </Button>
           </form>
           <div className="mt-4 text-center">
-            <div className="text-sm text-[#2A190F]/70">
+            <div className="text-[#2A190F]/70 text-sm">
               Are you an employer?{" "}
-              <Link href="/employer/login" className="text-[#2A190F] hover:underline font-semibold">
+              <Link
+                className="font-semibold text-[#2A190F] hover:underline"
+                href="/employer/login"
+              >
                 Login here
               </Link>
             </div>
@@ -86,5 +98,5 @@ export default function EmployeeLoginPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
