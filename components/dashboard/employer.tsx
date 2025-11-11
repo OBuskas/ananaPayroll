@@ -20,23 +20,22 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function EmployerDashboard() {
+export default function EmployerDashboard({
+  projectName,
+}: {
+  projectName: string;
+}) {
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="mb-2 font-bold text-3xl text-[#2A190F]">
-          Employer Dashboard
-        </h1>
-        <p className="text-[#2A190F]/70">
-          Manage your team's payroll and payments
-        </p>
-      </div>
+    <div className="h-full w-full">
+      <h1 className="mb-8 font-bold text-3xl text-[#2A190F] capitalize">
+        {projectName}
+      </h1>
 
       {/* Stats Cards */}
       <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-[#2A190F]/20 bg-white/50 backdrop-blur">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-medium text-[#2A190F] text-sm">
               Total Employees
@@ -49,7 +48,7 @@ export default function EmployerDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#2A190F]/20 bg-white/50 backdrop-blur">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-medium text-[#2A190F] text-sm">
               Monthly Payroll
@@ -62,7 +61,7 @@ export default function EmployerDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#2A190F]/20 bg-white/50 backdrop-blur">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-medium text-[#2A190F] text-sm">
               Pending Approvals
@@ -75,7 +74,7 @@ export default function EmployerDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#2A190F]/20 bg-white/50 backdrop-blur">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-medium text-[#2A190F] text-sm">
               Cost Savings
@@ -95,7 +94,7 @@ export default function EmployerDashboard() {
         onValueChange={setActiveTab}
         value={activeTab}
       >
-        <TabsList className="border border-[#2A190F]/20 bg-white/50">
+        <TabsList>
           <TabsTrigger
             className="data-[state=active]:bg-[#FCBA2E]"
             value="overview"
@@ -118,7 +117,7 @@ export default function EmployerDashboard() {
 
         <TabsContent className="space-y-4" value="overview">
           <div className="grid gap-4 md:grid-cols-2">
-            <Card className="border-[#2A190F]/20 bg-white/50 backdrop-blur">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-[#2A190F]">
                   Recent Activity
@@ -170,7 +169,7 @@ export default function EmployerDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-[#2A190F]/20 bg-white/50 backdrop-blur">
+            <Card>
               <CardHeader>
                 <CardTitle className="text-[#2A190F]">Quick Actions</CardTitle>
                 <CardDescription>Common payroll tasks</CardDescription>
