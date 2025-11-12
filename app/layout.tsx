@@ -4,6 +4,8 @@ import type React from "react";
 import "./globals.css";
 import Footer from "@/components/footer";
 import Header from "@/components/header";
+import InstallPrompt from "@/components/install-pwa";
+import RegisterSW from "@/components/register-sw";
 import Web3AuthWrapper from "@/context/web3auth";
 
 export const metadata: Metadata = {
@@ -54,6 +56,9 @@ export default function RootLayout({
             <main className="container mx-auto flex-1 p-6">{children}</main>
 
             <Footer />
+
+            <InstallPrompt />
+            <RegisterSW />
           </div>
         </Web3AuthWrapper>
       </body>
