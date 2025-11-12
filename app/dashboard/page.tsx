@@ -10,11 +10,55 @@ import {
   Plus,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { usePublicClient } from "wagmi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useContracts } from "@/context/contracts-context";
 
 export default function DashboardPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [organizationName, setOrganizationName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { companyRegistry } = useContracts();
+  const publicClient = usePublicClient();
+
+  console.log({
+    companyRegistry,
+    publicClient,
+    organizationName,
+  });
+
+  const handleCreateOrganization = async () => {
+    if (!(organizationName.trim() && companyRegistry && publicClient)) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const hash = await companyRegistry.write.registerCompany([
+        organizationName.trim(),
+      ]);
+      await publicClient.waitForTransactionReceipt({ hash });
+      setIsModalOpen(false);
+      setOrganizationName("");
+    } catch (error) {
+      console.error("Error creating organization:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const projects = [
     {
       title: "DeFi Protocol Audit",
@@ -182,11 +226,60 @@ export default function DashboardPage() {
       <div className="fixed right-6 bottom-6 z-50">
         <Button
           className="h-14 w-14 rounded-full bg-[#FCBA2E] text-[#2A190F] shadow-lg hover:bg-[#F1C644]"
+          onClick={() => setIsModalOpen(true)}
           size="lg"
         >
           <Plus className="h-6 w-6" />
         </Button>
       </div>
+
+      {/* Create Organization Modal */}
+      <Dialog onOpenChange={setIsModalOpen} open={isModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-[#2A190F]">
+              Crear Organización
+            </DialogTitle>
+            <DialogDescription className="text-[#2A190F]/70">
+              Ingresa el nombre de la organización que deseas crear.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label className="text-[#2A190F]" htmlFor="organization-name">
+                Nombre de la Organización
+              </Label>
+              <Input
+                className="text-[#2A190F]"
+                disabled={isLoading}
+                id="organization-name"
+                onChange={(e) => setOrganizationName(e.target.value)}
+                placeholder="Ej: Mi Empresa S.A."
+                value={organizationName}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="text-[#2A190F]"
+              disabled={isLoading}
+              onClick={() => setIsModalOpen(false)}
+              variant="outline"
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="bg-[#FCBA2E] text-[#2A190F] hover:bg-[#F1C644]"
+              disabled={
+                !organizationName.trim() || isLoading || !companyRegistry
+              }
+              onClick={handleCreateOrganization}
+            >
+              {isLoading ? "Creando..." : "Crear"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
