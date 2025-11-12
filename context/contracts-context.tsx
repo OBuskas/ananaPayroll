@@ -4,16 +4,17 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   type Abi,
   type Address,
+  type Chain,
   type GetContractReturnType,
   getContract,
   type PublicClient,
   type WalletClient,
 } from "viem";
-import { usePublicClient, useWalletClient } from "wagmi";
-import CompanyRegistryAbiJson from "../hardhat/abi/CompanyRegistry.json";
-import MockUSDTAbiJson from "../hardhat/abi/MockUSDT.json";
-import PaymentVaultAbiJson from "../hardhat/abi/PaymentVault.json";
-import PayrollManagerAbiJson from "../hardhat/abi/PayrollManager.json";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { CompanyRegistryAbi } from "@/hardhat/abi/CompanyRegistry.abi";
+import { MockUSDTAbi } from "@/hardhat/abi/MockUSDT.abi";
+import { PaymentVaultAbi } from "@/hardhat/abi/PaymentVault.abi";
+import { PayrollManagerAbi } from "@/hardhat/abi/PayrollManager.abi";
 import contracts from "../hardhat/deployed.json";
 
 const CompanyRegistry = contracts.CompanyRegistry as Address;
@@ -21,18 +22,15 @@ const PaymentVault = contracts.PaymentVault as Address;
 const MockUSDT = contracts.MockUSDT as Address;
 const PayrollManager = contracts.PayrollManager as Address;
 
-// Convertimos los ABIs JSON a tipos Abi de viem
-const CompanyRegistryAbi = CompanyRegistryAbiJson.abi as unknown as Abi;
-const PaymentVaultAbi = PaymentVaultAbiJson.abi as unknown as Abi;
-const MockUSDTAbi = MockUSDTAbiJson.abi as unknown as Abi;
-const PayrollManagerAbi = PayrollManagerAbiJson.abi as unknown as Abi;
-
 type ContractType<TAbi extends Abi> = GetContractReturnType<
   TAbi,
   PublicClient | WalletClient
 >;
 
 type ContractsContextType = {
+  address?: Address;
+  isConnected?: boolean;
+  account?: { account: Address; chain: Chain };
   companyRegistry?: ContractType<typeof CompanyRegistryAbi>;
   paymentVault?: ContractType<typeof PaymentVaultAbi>;
   mockUSDT?: ContractType<typeof MockUSDTAbi>;
@@ -48,7 +46,7 @@ const instantiateContract = <TAbi extends Abi>(
   contractAbi: TAbi,
   publicClient: PublicClient,
   walletClient: WalletClient
-): ContractType<TAbi> =>
+): GetContractReturnType<TAbi, PublicClient | WalletClient> =>
   getContract({
     address: contractAddress,
     abi: contractAbi,
@@ -56,7 +54,7 @@ const instantiateContract = <TAbi extends Abi>(
       public: publicClient,
       wallet: walletClient,
     },
-  }) as ContractType<TAbi>;
+  }) as GetContractReturnType<TAbi, PublicClient | WalletClient>;
 
 export function ContractsProvider({ children }: { children: React.ReactNode }) {
   const [companyRegistry, setCompanyRegistry] = useState<
@@ -73,30 +71,21 @@ export function ContractsProvider({ children }: { children: React.ReactNode }) {
   >(undefined);
 
   const publicClient = usePublicClient();
-  const walletClient = useWalletClient();
+  const { data: walletClient } = useWalletClient();
+  const { address, isConnected, chain } = useAccount();
+  const account = address && chain ? { account: address, chain } : undefined;
 
   useEffect(() => {
-    if (!(publicClient && walletClient?.data)) {
+    if (!(publicClient && walletClient)) {
       return;
     }
-
-    const compRegistry = instantiateContract(
-      CompanyRegistry,
-      CompanyRegistryAbi,
-      publicClient,
-      walletClient.data
-    );
-
-    console.log({
-      compRegistry,
-    });
 
     setCompanyRegistry(
       instantiateContract(
         CompanyRegistry,
         CompanyRegistryAbi,
         publicClient,
-        walletClient.data
+        walletClient
       )
     );
     setPaymentVault(
@@ -104,30 +93,33 @@ export function ContractsProvider({ children }: { children: React.ReactNode }) {
         PaymentVault,
         PaymentVaultAbi,
         publicClient,
-        walletClient.data
+        walletClient
       )
     );
     setMockUSDT(
-      instantiateContract(
-        MockUSDT,
-        MockUSDTAbi,
-        publicClient,
-        walletClient.data
-      )
+      instantiateContract(MockUSDT, MockUSDTAbi, publicClient, walletClient)
     );
     setPayrollManager(
       instantiateContract(
         PayrollManager,
         PayrollManagerAbi,
         publicClient,
-        walletClient.data
+        walletClient
       )
     );
   }, [publicClient, walletClient]);
 
   return (
     <ContractsContext.Provider
-      value={{ companyRegistry, paymentVault, mockUSDT, payrollManager }}
+      value={{
+        companyRegistry,
+        paymentVault,
+        mockUSDT,
+        payrollManager,
+        address,
+        isConnected,
+        account,
+      }}
     >
       {children}
     </ContractsContext.Provider>

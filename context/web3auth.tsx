@@ -16,6 +16,7 @@ const queryClient = new QueryClient();
 const web3AuthOptions: Web3AuthOptions = {
   clientId,
   web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+  defaultChainId: "0xaa36a7",
   ssr: true,
 };
 
