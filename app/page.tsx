@@ -13,9 +13,8 @@ export default function Home() {
       <TabsSection />
       <FeaturesSection />
       <HowItWorksSection />
-      <TrustedSection />
+      {/* <TrustedSection /> */}
       <FAQSection />
-      <CTASection />
     </div>
   );
 }

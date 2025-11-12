@@ -7,7 +7,7 @@ export default function FeaturesSection() {
       icon: Shield,
       title: "Blockchain Security",
       description:
-        "Smart contracts ensure your funds are protected and transparent",
+        "Smart contracts. Ensure your funds are protected and transparent",
     },
     {
       icon: TrendingUp,
@@ -40,10 +40,10 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section className="bg-white py-20">
-      <div className="container mx-auto px-4">
-        <div className="mb-12 text-center">
-          <h2 className="mb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
+    <section className="bg-white py-10 rounded-3xl md:py-12">
+      <div className="container mx-auto px-4 rounded-full">
+        <div className="pb-4 text-center">
+          <h2 className="pb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
             Why Choose Ananá Payroll?
           </h2>
           <p className="mx-auto max-w-2xl text-[#2A190F]/70 text-lg">

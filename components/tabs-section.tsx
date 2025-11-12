@@ -6,27 +6,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TabsSection() {
   const employerFeatures = [
-    "Earn yield on idle payroll funds - turn waiting time into profit",
-    "Automated smart contracts - no delays, no manual processing",
-    "Full transparency - every transaction verified on-chain",
-    "Instant payroll execution - payments deploy automatically",
-    "Flexible token support - pay in stablecoins or your preferred crypto",
+    "Automated smart contracts: no delays, no manual processing",
+    "Full transparency: every transaction verified on-chain",
+    "Instant payroll execution: payments deploy automatically",
+    "Flexible token support: pay in stablecoins or your preferred crypto",
   ];
 
   const employeeFeatures = [
-    "Instant payments — receive your salary automatically when the cycle ends",
-    "No tracking needed — your time and earnings are already secured on-chain",
-    "Shared growth — earn yield together with your employer — your money works while you do",
-    "Transparent earnings history — track every payment, every yield, directly from your dashboard",
-    "Funds protected by smart contracts — no middlemen, no missed paydays",
-    "Access your salary anytime — request early withdrawals when you need them",
+    "Instant payments: receive your salary automatically when the cycle ends",
+    "No tracking needed: your time and earnings are already secured on-chain",
+    "Shared growth: earn yield together with your employer, your money works while you do",
+    "Transparent earnings history: track every payment, every yield, directly from your dashboard",
+    "Funds protected by smart contracts: no middlemen, no missed paydays",
+    "Access your salary anytime: request early withdrawals when you need them",
   ];
 
   return (
-    <section className="bg-[#F2E2C4] py-20">
-      <div className="container mx-auto px-4">
+    <section className="bg-[#F2E2C4] pt-2 pb-6 md:py-12">
+      <div className="container mx-auto">
         <Tabs className="w-full" defaultValue="employer">
-          <TabsList className="mx-auto mb-12 grid h-14 w-full max-w-md grid-cols-2 rounded-full bg-white/50 p-1">
+          <TabsList className="mx-auto pb-1 grid h-14 w-full max-w-md grid-cols-2 rounded-full bg-white/50 p-1">
             <TabsTrigger
               className="rounded-full font-semibold text-base data-[state=active]:bg-[#FCBA2E] data-[state=active]:text-[#2A190F] data-[state=active]:shadow-md"
               value="employer"
@@ -43,10 +42,10 @@ export default function TabsSection() {
 
           <TabsContent className="mt-0" value="employer">
             <Card className="rounded-3xl border-[#2A190F]/10 bg-white/80 p-8 md:p-12">
-              <h2 className="mb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
+              <h2 className="mb-2 font-bold text-3xl text-[#2A190F] md:text-4xl">
                 {"Don't waste your time"}
               </h2>
-              <p className="mb-8 text-[#2A190F]/80 text-lg leading-relaxed">
+              <p className="mb-4 text-[#2A190F]/80 text-lg leading-relaxed">
                 Automatize your entire payment process while your funds generate
                 passive yield. Safely, transparently, and on-chain.
               </p>
@@ -63,10 +62,10 @@ export default function TabsSection() {
 
           <TabsContent className="mt-0" value="employee">
             <Card className="rounded-3xl border-[#2A190F]/10 bg-white/80 p-8 md:p-12">
-              <h2 className="mb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
+              <h2 className="mb-2 font-bold text-3xl text-[#2A190F] md:text-4xl">
                 Get paid on time
               </h2>
-              <p className="mb-8 text-[#2A190F]/80 text-lg leading-relaxed">
+              <p className="mb-4 text-[#2A190F]/80 text-lg leading-relaxed">
                 Ananá Payroll gives visibility, control and ownership. See your
                 earnings grow in real time. No delays. No paperwork. No worries.
               </p>
