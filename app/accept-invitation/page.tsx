@@ -2,7 +2,7 @@
 
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { formatUnits } from "viem";
 import { usePublicClient } from "wagmi";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/card";
 import { useContracts } from "@/context/contracts-context";
 
-export default function AcceptInvitationPage() {
+function AcceptInvitationContent() {
   const searchParams = useSearchParams();
   const companyIdParam = searchParams.get("companyId");
   const employeeAddressParam = searchParams.get("employee");
@@ -396,5 +396,19 @@ export default function AcceptInvitationPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AcceptInvitationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <AnanaLoading />
+        </div>
+      }
+    >
+      <AcceptInvitationContent />
+    </Suspense>
   );
 }
