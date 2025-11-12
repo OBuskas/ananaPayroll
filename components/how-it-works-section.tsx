@@ -39,7 +39,7 @@ export default function HowItWorksSection() {
             Simple, transparent, and fully automated payroll in four steps
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:gap-8">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
           {steps.map((step) => (
             <Card
               className="relative overflow-hidden rounded-2xl border-[#2A190F]/10 bg-white p-6"

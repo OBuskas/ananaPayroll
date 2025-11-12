@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 
 export default function CTASection() {
   return (
-    <section className="bg-[#FCBA2E] pt-12">
+    <section className="bg-[#FCBA2E] pt-6">
       <div className="container mx-auto px-4">
-        <div className="px-auto flex max-w-5xl flex-col items-center justify-between gap-8 lg:flex-row">
+        <div className="flex max-w-5xl flex-col items-center justify-between gap-8 px-auto lg:flex-row">
           <div className="flex-1">
-            <h2 className="pb-4 text-balance font-bold text-3xl text-[#2A190F] md:text-4xl">
+            <h2 className="text-balance pb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
               Ready to revolutionize your payroll?
             </h2>
             <p className="mb-6 text-[#2A190F]/80 text-lg leading-relaxed">

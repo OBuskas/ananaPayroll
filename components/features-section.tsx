@@ -40,8 +40,8 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section className="bg-white py-10 rounded-3xl md:py-12">
-      <div className="container mx-auto px-4 rounded-full">
+    <section className="mb-10 rounded-3xl bg-white py-10 md:mb-12 md:py-12">
+      <div className="container mx-auto rounded-full px-4">
         <div className="pb-4 text-center">
           <h2 className="pb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
             Why Choose Ananá Payroll?

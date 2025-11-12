@@ -15,27 +15,22 @@ export default function FAQSection() {
     {
       question: "What cryptocurrencies can I use for payroll?",
       answer:
-        "We support major stablecoins like USDC, USDT, and DAI, as well as native tokens. You can pay in any supported crypto on our platform.",
-    },
-    {
-      question: "How does the yield generation work?",
-      answer:
-        "Locked payroll funds are automatically deposited into trusted DeFi protocols to earn yield. The yield is shared between employer and employee based on your configuration.",
+        "For now, we support USDT. However, we are working on adding support for other stablecoins based on user demand.",
     },
     {
       question: "Can employees access funds before the payment date?",
       answer:
-        "Yes! Employees can request early withdrawals if the employer enables this feature. The smart contract ensures fair terms are maintained.",
+        "No! But employees can request early withdrawals if the employer enables this feature. The smart contract ensures fair terms are maintained.",
     },
     {
       question: "What blockchains does Ananá Payroll support?",
       answer:
-        "We currently support Ethereum, Polygon, Arbitrum, and Base. More chains are being added regularly based on community feedback.",
+        "We currently support Ethereum. More chains are being added regularly based on community feedback.",
     },
     {
       question: "How do I get started?",
       answer:
-        "Simply sign up, create your company profile, add employees, and lock your first payroll funds. The entire process takes less than 10 minutes.",
+        "Simply! Sign up, create your company profile, add employees, and lock your first payroll funds. The entire process takes less than 10 minutes.",
     },
   ];
 
@@ -43,7 +38,7 @@ export default function FAQSection() {
     <section className="bg-[#F2E2C4] py-10 md:py-12">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-12 text-center">
+          <div className="mb-6 text-center">
             <h2 className="mb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
               Frequently Asked Questions
             </h2>

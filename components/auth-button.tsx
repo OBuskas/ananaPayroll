@@ -69,7 +69,7 @@ export default function AuthButton() {
   if (!isConnected) {
     return (
       <Button disabled={isLoading} onClick={() => connect()}>
-        Iniciar sesión
+        Login
       </Button>
     );
   }
@@ -85,11 +85,11 @@ export default function AuthButton() {
         <UserCircleIcon className="size-8 cursor-pointer stroke-1.5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
+        <DropdownMenuLabel>My account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled>
           <Network className="mr-2 h-4 w-4" />
-          <span>Red: {getChainName(chainId)}</span>
+          <span>Network: {getChainName(chainId)}</span>
         </DropdownMenuItem>
         <DropdownMenuItem disabled>
           <Wallet className="mr-2 h-4 w-4" />
@@ -103,7 +103,7 @@ export default function AuthButton() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleDisconnect} variant="destructive">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Cerrar sesión</span>
+          <span>Logout</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -25,7 +25,7 @@ export default function TabsSection() {
     <section className="bg-[#F2E2C4] pt-2 pb-6 md:py-12">
       <div className="container mx-auto">
         <Tabs className="w-full" defaultValue="employer">
-          <TabsList className="mx-auto pb-1 grid h-14 w-full max-w-md grid-cols-2 rounded-full bg-white/50 p-1">
+          <TabsList className="mx-auto grid h-14 w-full max-w-md grid-cols-2 rounded-full bg-white/50 p-1 pb-1">
             <TabsTrigger
               className="rounded-full font-semibold text-base data-[state=active]:bg-[#FCBA2E] data-[state=active]:text-[#2A190F] data-[state=active]:shadow-md"
               value="employer"
