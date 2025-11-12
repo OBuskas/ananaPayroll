@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Jersey_25 } from "next/font/google";
 import type React from "react";
 import "./globals.css";
+import { Toaster } from "sonner";
 import Footer from "@/components/footer";
 import Header from "@/components/header";
 import InstallPrompt from "@/components/install-pwa";
@@ -61,6 +62,7 @@ export default function RootLayout({
             <RegisterSW />
           </div>
         </Web3AuthWrapper>
+        <Toaster richColors />
       </body>
     </html>
   );

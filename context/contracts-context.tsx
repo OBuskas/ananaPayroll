@@ -12,12 +12,14 @@ import {
 } from "viem";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { CompanyRegistryAbi } from "@/hardhat/abi/CompanyRegistry.abi";
+import { EmployeeRegistryAbi } from "@/hardhat/abi/EmployeeRegistry.abi";
 import { MockUSDTAbi } from "@/hardhat/abi/MockUSDT.abi";
 import { PaymentVaultAbi } from "@/hardhat/abi/PaymentVault.abi";
 import { PayrollManagerAbi } from "@/hardhat/abi/PayrollManager.abi";
 import contracts from "../hardhat/deployed.json";
 
 const CompanyRegistry = contracts.CompanyRegistry as Address;
+const EmployeeRegistry = contracts.EmployeeRegistry as Address;
 const PaymentVault = contracts.PaymentVault as Address;
 const MockUSDT = contracts.MockUSDT as Address;
 const PayrollManager = contracts.PayrollManager as Address;
@@ -32,6 +34,7 @@ type ContractsContextType = {
   isConnected?: boolean;
   account?: { account: Address; chain: Chain };
   companyRegistry?: ContractType<typeof CompanyRegistryAbi>;
+  employeeRegistry?: ContractType<typeof EmployeeRegistryAbi>;
   paymentVault?: ContractType<typeof PaymentVaultAbi>;
   mockUSDT?: ContractType<typeof MockUSDTAbi>;
   payrollManager?: ContractType<typeof PayrollManagerAbi>;
@@ -59,6 +62,9 @@ const instantiateContract = <TAbi extends Abi>(
 export function ContractsProvider({ children }: { children: React.ReactNode }) {
   const [companyRegistry, setCompanyRegistry] = useState<
     ContractType<typeof CompanyRegistryAbi> | undefined
+  >(undefined);
+  const [employeeRegistry, setEmployeeRegistry] = useState<
+    ContractType<typeof EmployeeRegistryAbi> | undefined
   >(undefined);
   const [paymentVault, setPaymentVault] = useState<
     ContractType<typeof PaymentVaultAbi> | undefined
@@ -88,6 +94,14 @@ export function ContractsProvider({ children }: { children: React.ReactNode }) {
         walletClient
       )
     );
+    setEmployeeRegistry(
+      instantiateContract(
+        EmployeeRegistry,
+        EmployeeRegistryAbi,
+        publicClient,
+        walletClient
+      )
+    );
     setPaymentVault(
       instantiateContract(
         PaymentVault,
@@ -113,6 +127,7 @@ export function ContractsProvider({ children }: { children: React.ReactNode }) {
     <ContractsContext.Provider
       value={{
         companyRegistry,
+        employeeRegistry,
         paymentVault,
         mockUSDT,
         payrollManager,

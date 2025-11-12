@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
+import AnanaLoading from "@/components/anana-loading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
 import { useContracts } from "@/context/contracts-context";
 
 export default function DashboardPage() {
@@ -141,7 +141,9 @@ export default function DashboardPage() {
               <LayoutPanelLeftIcon className="h-10 w-10 text-[#FCBA2E]" />
               <div className="flex-1">
                 <p className="text-[#2A190F]/60 text-sm">Active Projects</p>
-                <p className="font-bold text-2xl text-[#2A190F]">5</p>
+                <p className="font-bold text-2xl text-[#2A190F]">
+                  {projects.length}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -167,9 +169,7 @@ export default function DashboardPage() {
           </div>
 
           {loadingProjects ? (
-            <div className="flex items-center justify-center">
-              <Spinner />
-            </div>
+            <AnanaLoading />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {projects.map((project) => (
