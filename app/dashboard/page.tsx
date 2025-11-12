@@ -26,65 +26,66 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useContracts } from "@/context/contracts-context";
+import { useEffect } from "react";
 
 export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [organizationName, setOrganizationName] = useState("");
+  const [newOrganizationName, setNewOrganizationName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { companyRegistry } = useContracts();
   const publicClient = usePublicClient();
 
-  console.log({
+  const { 
+    companyRegistryRead,
+    companyRegistryWrite,
+    organizationName,
+    createCompany,
+    isConnected,
+    walletClient,
+    getUserCompanies,
+    address
+  } = useContracts();
+
+  
+  /* console.log({
     companyRegistry,
     publicClient,
     organizationName,
   });
+ */
+const handleCreateOrganization = async () => {
+  if (!newOrganizationName.trim() || !createCompany) return;
+  setIsLoading(true);
 
-  const handleCreateOrganization = async () => {
-    if (!(organizationName.trim() && companyRegistry && publicClient)) {
-      return;
-    }
+  try {
+    await createCompany(newOrganizationName.trim());
+    setNewOrganizationName("");
+    setIsModalOpen(false);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-    setIsLoading(true);
-    try {
-      const hash = await companyRegistry.write.registerCompany([
-        organizationName.trim(),
-      ]);
-      await publicClient.waitForTransactionReceipt({ hash });
-      setIsModalOpen(false);
-      setOrganizationName("");
-    } catch (error) {
-      console.error("Error creating organization:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const projects = [
-    {
-      title: "DeFi Protocol Audit",
+  const [projects, setProjects] = useState<ProjectType[]>([]);
+
+  useEffect(() => {
+  const fetchProjects = async () => {
+    if (!address || !getUserCompanies) return;
+    const companies = await getUserCompanies(address);
+    const mapped = companies.map((c) => ({
+      title: c.name,
       status: "In Progress",
       statusColor: "bg-green-100 text-green-700",
-      description: "Smart contract security review for a new lending protocol.",
+      description: "Company managed by you",
       role: "Employer",
-      milestone: "Next Milestone: Code Freeze",
-    },
-    {
-      title: "NFT Marketplace UI",
-      status: "Completed",
-      statusColor: "bg-gray-100 text-gray-700",
-      description: "Front-end development for collectibles platform.",
-      role: "Employee",
-      updates: "3 New Updates",
-    },
-    {
-      title: "DAO Governance Module",
-      status: "In Progress",
-      statusColor: "bg-green-100 text-green-700",
-      description: "Building on-chain voting mechanism.",
-      role: "Employee",
-      progress: 75,
-    },
-  ];
+      milestone: "Planning Phase",
+    }));
+    setProjects(mapped);
+  };
+
+  fetchProjects();
+}, [address, getUserCompanies]);
 
   return (
     <div className="h-full w-full">
@@ -253,9 +254,9 @@ export default function DashboardPage() {
                 className="text-[#2A190F]"
                 disabled={isLoading}
                 id="organization-name"
-                onChange={(e) => setOrganizationName(e.target.value)}
+                onChange={(e) => setNewOrganizationName(e.target.value)}
                 placeholder="Ej: Mi Empresa S.A."
-                value={organizationName}
+                value={newOrganizationName}
               />
             </div>
           </div>
@@ -271,7 +272,11 @@ export default function DashboardPage() {
             <Button
               className="bg-[#FCBA2E] text-[#2A190F] hover:bg-[#F1C644]"
               disabled={
-                !organizationName.trim() || isLoading || !companyRegistry
+                !newOrganizationName.trim() || 
+                isLoading || 
+                !createCompany || 
+                !isConnected || 
+                !walletClient
               }
               onClick={handleCreateOrganization}
             >
