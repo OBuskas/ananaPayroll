@@ -75,6 +75,8 @@ export default function EmployerDashboard({
   const [isRunningPayroll, setIsRunningPayroll] = useState(false);
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   const [isAddingEmployee, setIsAddingEmployee] = useState(false);
+  const [isInviteLinkModalOpen, setIsInviteLinkModalOpen] = useState(false);
+  const [generatedInviteLink, setGeneratedInviteLink] = useState("");
   const [employeeForm, setEmployeeForm] = useState({
     wallet: "",
     amount: "",
@@ -323,19 +325,8 @@ export default function EmployerDashboard({
         // Generate invite link with employee address
         const inviteLink = `${window.location.origin}/accept-invitation?companyId=${companyContractId}&employee=${employeeForm.wallet}`;
 
-        // Copy to clipboard
-        try {
-          await navigator.clipboard.writeText(inviteLink);
-          toast.success(
-            "Empleado agregado exitosamente. Link de invitación copiado al portapapeles"
-          );
-        } catch {
-          // Fallback: show link in toast
-          toast.success(`Empleado agregado. Link: ${inviteLink}`, {
-            duration: 10_000,
-          });
-        }
-
+        // Store the invite link and show modal
+        setGeneratedInviteLink(inviteLink);
         setIsAddEmployeeOpen(false);
         setEmployeeForm({
           wallet: "",
@@ -343,8 +334,7 @@ export default function EmployerDashboard({
           frequencyDays: "",
           lockPeriodDays: "",
         });
-        // Refresh data
-        window.location.reload();
+        setIsInviteLinkModalOpen(true);
       }
     } catch (error: unknown) {
       console.error("Error adding employee:", error);
@@ -773,6 +763,60 @@ export default function EmployerDashboard({
               onClick={handleAddEmployee}
             >
               {isAddingEmployee ? "Agregando..." : "Agregar Empleado"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Link Dialog */}
+      <Dialog
+        onOpenChange={setIsInviteLinkModalOpen}
+        open={isInviteLinkModalOpen}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-[#2A190F]">
+              Empleado Agregado Exitosamente
+            </DialogTitle>
+            <DialogDescription>
+              Comparte este link con el empleado para que acepte la invitación
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-[#2A190F]">Link de Invitación</Label>
+              <div className="flex gap-2">
+                <Input
+                  className="font-mono text-xs"
+                  readOnly
+                  value={generatedInviteLink}
+                />
+                <Button
+                  className="border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(generatedInviteLink);
+                      toast.success("Link copiado al portapapeles");
+                    } catch {
+                      toast.error("Error al copiar el link");
+                    }
+                  }}
+                  variant="outline"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="w-full bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
+              onClick={() => {
+                setIsInviteLinkModalOpen(false);
+                window.location.reload();
+              }}
+            >
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>
