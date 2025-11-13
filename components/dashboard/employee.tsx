@@ -8,7 +8,8 @@ import {
   Settings,
   TrendingUp,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { formatUnits } from "viem";
 import { usePublicClient } from "wagmi";
 import AnanaLoading from "@/components/anana-loading";
@@ -31,6 +32,7 @@ type Employee = {
   lockPeriod: bigint;
   accepted: boolean;
   active: boolean;
+  exists: boolean;
 };
 
 type Payment = {
@@ -65,8 +67,120 @@ export default function EmployeeDashboard({
   const [lastPayment, setLastPayment] = useState<Payment | null>(null);
   const [nextPayment, setNextPayment] = useState<Payment | null>(null);
   const [ytdEarnings, setYtdEarnings] = useState(0);
+  const [usdtBalance, setUsdtBalance] = useState<bigint>(BigInt(0));
+  const [claimingPaymentId, setClaimingPaymentId] = useState<bigint | null>(
+    null
+  );
 
   const [activeTab, setActiveTab] = useState("overview");
+
+  const fetchCompanyName = useCallback(
+    async (companyId: bigint) => {
+      if (!companyRegistry) {
+        return "";
+      }
+      const company = await companyRegistry.read.getCompany([companyId]);
+      return company.name;
+    },
+    [companyRegistry]
+  );
+
+  const fetchEmployeeData = useCallback(
+    async (companyId: bigint) => {
+      if (!employeeRegistry) {
+        return null;
+      }
+      if (!address) {
+        return null;
+      }
+      return await employeeRegistry.read.getEmployee([companyId, address]);
+    },
+    [employeeRegistry, address]
+  );
+
+  const fetchPaymentsForEmployee = useCallback(
+    async (employeeAddress: string): Promise<Payment[]> => {
+      if (!paymentVault) {
+        return [];
+      }
+      const nextPaymentId = await paymentVault.read.nextPaymentId();
+      const paymentList: Payment[] = [];
+
+      for (let i = BigInt(0); i < nextPaymentId; i++) {
+        try {
+          const payment = await paymentVault.read.payments([i]);
+          const [
+            id,
+            paymentCompany,
+            paymentEmployee,
+            amount,
+            releaseAt,
+            claimed,
+          ] = payment;
+          if (paymentEmployee.toLowerCase() === employeeAddress.toLowerCase()) {
+            paymentList.push({
+              id,
+              company: paymentCompany,
+              employee: paymentEmployee,
+              amount,
+              releaseAt,
+              claimed,
+            });
+          }
+        } catch (err) {
+          console.warn("Error fetching payment:", err);
+        }
+      }
+
+      return paymentList.sort((a, b) => Number(b.releaseAt - a.releaseAt));
+    },
+    [paymentVault]
+  );
+
+  const processPayments = useCallback(
+    async (paymentList: Payment[], claimedPayments: Payment[]) => {
+      setPayments(paymentList);
+
+      if (claimedPayments.length > 0) {
+        setLastPayment(claimedPayments[0]);
+      }
+
+      const unclaimedPayments = paymentList.filter((p) => !p.claimed);
+      if (unclaimedPayments.length > 0) {
+        const next = unclaimedPayments.reduce((prev, current) =>
+          current.releaseAt < prev.releaseAt ? current : prev
+        );
+        setNextPayment(next);
+      }
+
+      const currentYear = new Date().getFullYear();
+      const yearStart = BigInt(
+        Math.floor(new Date(currentYear, 0, 1).getTime() / 1000)
+      );
+      const ytdTotal = claimedPayments
+        .filter((p) => p.releaseAt >= yearStart)
+        .reduce((sum, p) => sum + p.amount, BigInt(0));
+
+      const decimals = (await mockUSDT?.read.decimals()) || BigInt(6);
+      setYtdEarnings(Number(formatUnits(ytdTotal, Number(decimals))));
+    },
+    [mockUSDT]
+  );
+
+  const fetchUsdtBalance = useCallback(async () => {
+    if (!mockUSDT) {
+      return;
+    }
+    if (!address) {
+      return;
+    }
+    try {
+      const balance = await mockUSDT.read.balanceOf([address]);
+      setUsdtBalance(balance);
+    } catch (error) {
+      console.error("Error fetching USDT balance:", error);
+    }
+  }, [mockUSDT, address]);
 
   useEffect(() => {
     if (
@@ -88,92 +202,25 @@ export default function EmployeeDashboard({
         setLoadingPage(true);
         const companyId = BigInt(companyContractId);
 
-        // Fetch company name
-        const company = await companyRegistry.read.getCompany([companyId]);
-        setCompanyName(company.name);
+        const name = await fetchCompanyName(companyId);
+        setCompanyName(name);
 
-        // Fetch employee data
-        const employeeData = await employeeRegistry.read.getEmployee([
-          companyId,
-          address,
-        ]);
+        const employeeData = await fetchEmployeeData(companyId);
+        console.log("employeeData", employeeData);
 
-        if (!employeeData.exists) {
-          setLoadingPage(false);
+        if (!employeeData?.exists) {
           return;
         }
 
-        setEmployee({
-          wallet: address,
-          amount: employeeData.amount,
-          frequency: employeeData.frequency,
-          lockPeriod: employeeData.lockPeriod,
-          accepted: employeeData.accepted,
-          active: employeeData.active,
-        });
+        setEmployee(employeeData);
 
-        // Fetch payments for this employee
-        const nextPaymentId = await paymentVault.read.nextPaymentId();
-        const paymentList: Payment[] = [];
-
-        for (let i = BigInt(0); i < nextPaymentId; i++) {
-          try {
-            const payment = await paymentVault.read.payments([i]);
-            const [
-              id,
-              paymentCompany,
-              paymentEmployee,
-              amount,
-              releaseAt,
-              claimed,
-            ] = payment;
-            if (paymentEmployee.toLowerCase() === address.toLowerCase()) {
-              paymentList.push({
-                id,
-                company: paymentCompany,
-                employee: paymentEmployee,
-                amount,
-                releaseAt,
-                claimed,
-              });
-            }
-          } catch (err) {
-            console.warn("Error fetching payment:", err);
-          }
+        if (!address) {
+          return;
         }
-
-        // Sort payments by releaseAt (newest first)
-        paymentList.sort((a, b) => Number(b.releaseAt - a.releaseAt));
-        setPayments(paymentList);
-
-        // Find last payment (claimed)
+        const paymentList = await fetchPaymentsForEmployee(address);
         const claimedPayments = paymentList.filter((p) => p.claimed);
-        if (claimedPayments.length > 0) {
-          setLastPayment(claimedPayments[0]);
-        }
-
-        // Find next payment (not claimed and releaseAt in future or past but not claimed)
-        const now = BigInt(Math.floor(Date.now() / 1000));
-        const unclaimedPayments = paymentList.filter((p) => !p.claimed);
-        if (unclaimedPayments.length > 0) {
-          // Find the one with the earliest releaseAt that's in the past or near future
-          const next = unclaimedPayments.reduce((prev, current) =>
-            current.releaseAt < prev.releaseAt ? current : prev
-          );
-          setNextPayment(next);
-        }
-
-        // Calculate YTD earnings (all claimed payments this year)
-        const currentYear = new Date().getFullYear();
-        const yearStart = BigInt(
-          Math.floor(new Date(currentYear, 0, 1).getTime() / 1000)
-        );
-        const ytdTotal = claimedPayments
-          .filter((p) => p.releaseAt >= yearStart)
-          .reduce((sum, p) => sum + p.amount, 0n);
-
-        const decimals = (await mockUSDT?.read.decimals()) || BigInt(6);
-        setYtdEarnings(Number(formatUnits(ytdTotal, Number(decimals))));
+        await processPayments(paymentList, claimedPayments);
+        await fetchUsdtBalance();
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -183,43 +230,70 @@ export default function EmployeeDashboard({
 
     fetchData();
   }, [
+    companyContractId,
     companyRegistry,
     employeeRegistry,
     paymentVault,
-    mockUSDT,
+    fetchCompanyName,
+    fetchEmployeeData,
+    fetchPaymentsForEmployee,
+    processPayments,
+    fetchUsdtBalance,
     address,
     isConnected,
     account,
-    companyContractId,
     publicClient,
   ]);
 
   const handleClaim = async (paymentId: bigint) => {
     if (!(paymentVault && account)) {
+      toast.error("Cannot connect to contract");
       return;
     }
 
     try {
+      setClaimingPaymentId(paymentId);
+      toast.loading("Processing payment claim...", { id: "claim" });
       const hash = await paymentVault.write.claim([paymentId], account);
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash });
+        toast.success("Payment claimed successfully!", { id: "claim" });
         // Refresh data
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       }
     } catch (error) {
       console.error("Error claiming payment:", error);
-      // eslint-disable-next-line no-alert
-      alert("Error al reclamar el pago");
+      const errorMessage =
+        (error as { shortMessage?: string; message?: string })?.shortMessage ||
+        (error as { message?: string })?.message ||
+        "Error claiming payment";
+      toast.error(errorMessage, { id: "claim" });
+    } finally {
+      setClaimingPaymentId(null);
     }
   };
 
-  const formatAmount = (amount: bigint, decimals = 6) =>
+  const handleViewTaxDocuments = () => {
+    toast.info("Coming soon: Tax documents available", {
+      duration: 3000,
+    });
+  };
+
+  const handleUpdateBankDetails = () => {
+    toast.info("Coming soon: Bank details update", {
+      duration: 3000,
+    });
+  };
+
+  const formatAmount = (amount: bigint, tokenDecimals = 6) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(Number(formatUnits(amount, decimals)));
+    }).format(Number(formatUnits(amount, tokenDecimals)));
 
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) * 1000);
@@ -237,17 +311,36 @@ export default function EmployeeDashboard({
     return days;
   };
 
+  const getNextPaymentStatus = (payment: Payment | null): string => {
+    if (!payment) {
+      return "No pending payments";
+    }
+    const days = getDaysUntil(payment.releaseAt);
+    if (days > 0) {
+      return `In ${days} days`;
+    }
+    return "Available now";
+  };
+
+  const hasAvailablePayments = (): boolean => {
+    if (!nextPayment || nextPayment.claimed) {
+      return false;
+    }
+    const days = getDaysUntil(nextPayment.releaseAt);
+    return days <= 0;
+  };
+
   if (loadingPage) {
     return <AnanaLoading />;
   }
 
-  if (!(employee && employee.exists)) {
+  if (!employee?.exists) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Card>
           <CardContent className="p-6">
             <p className="text-[#2A190F]">
-              No se encontró información de empleado para esta compañía.
+              No employee information found for this company.
             </p>
           </CardContent>
         </Card>
@@ -300,11 +393,7 @@ export default function EmployeeDashboard({
               {nextPayment ? formatDate(nextPayment.releaseAt) : "N/A"}
             </div>
             <p className="text-[#2A190F]/60 text-xs">
-              {nextPayment
-                ? getDaysUntil(nextPayment.releaseAt) > 0
-                  ? `In ${getDaysUntil(nextPayment.releaseAt)} days`
-                  : "Available now"
-                : "No pending payments"}
+              {getNextPaymentStatus(nextPayment)}
             </p>
           </CardContent>
         </Card>
@@ -330,15 +419,15 @@ export default function EmployeeDashboard({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-medium text-[#2A190F] text-sm">
-              Documents
+              USDT Balance
             </CardTitle>
-            <FileText className="h-4 w-4 text-[#2A190F]/60" />
+            <DollarSign className="h-4 w-4 text-[#2A190F]/60" />
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl text-[#2A190F]">
-              {payments.length}
+              {formatAmount(usdtBalance, decimals)}
             </div>
-            <p className="text-[#2A190F]/60 text-xs">Payment records</p>
+            <p className="text-[#2A190F]/60 text-xs">Available balance</p>
           </CardContent>
         </Card>
       </div>
@@ -412,7 +501,7 @@ export default function EmployeeDashboard({
                   ))}
                   {payments.length === 0 && (
                     <p className="text-[#2A190F]/60 text-sm">
-                      No hay pagos registrados
+                      No payments registered
                     </p>
                   )}
                 </div>
@@ -425,17 +514,31 @@ export default function EmployeeDashboard({
                 <CardDescription>Common actions</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {nextPayment && !nextPayment.claimed && (
+                {nextPayment && !nextPayment.claimed ? (
                   <Button
                     className="w-full justify-start bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
+                    disabled={
+                      claimingPaymentId !== null || !hasAvailablePayments()
+                    }
                     onClick={() => handleClaim(nextPayment.id)}
                   >
                     <Download className="mr-2 h-4 w-4" />
-                    Claim Payment
+                    {claimingPaymentId === nextPayment.id
+                      ? "Processing..."
+                      : "Claim Payment"}
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full justify-start bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
+                    disabled
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    No Payment Available
                   </Button>
                 )}
                 <Button
                   className="w-full justify-start border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+                  onClick={handleViewTaxDocuments}
                   variant="outline"
                 >
                   <FileText className="mr-2 h-4 w-4" />
@@ -443,6 +546,7 @@ export default function EmployeeDashboard({
                 </Button>
                 <Button
                   className="w-full justify-start border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+                  onClick={handleUpdateBankDetails}
                   variant="outline"
                 >
                   <Settings className="mr-2 h-4 w-4" />
@@ -510,7 +614,7 @@ export default function EmployeeDashboard({
               <div className="space-y-3">
                 {payments.length === 0 ? (
                   <p className="text-[#2A190F]/60 text-sm">
-                    No hay pagos registrados
+                    No payments registered
                   </p>
                 ) : (
                   payments.map((payment) => (
@@ -543,6 +647,11 @@ export default function EmployeeDashboard({
                         </div>
                         {!payment.claimed && (
                           <Button
+                            disabled={
+                              (claimingPaymentId !== null &&
+                                claimingPaymentId === payment.id) ||
+                              getDaysUntil(payment.releaseAt) > 0
+                            }
                             onClick={() => handleClaim(payment.id)}
                             size="sm"
                             variant="ghost"
@@ -568,37 +677,14 @@ export default function EmployeeDashboard({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {payments.map((payment) => (
-                  <div
-                    className="flex items-center justify-between rounded-lg border border-[#2A190F]/10 p-4 transition-colors hover:bg-[#2A190F]/5"
-                    key={Number(payment.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-5 w-5 text-[#2A190F]/60" />
-                      <div>
-                        <p className="font-medium text-[#2A190F]">
-                          Pay Stub - Payment #{Number(payment.id)}
-                        </p>
-                        <p className="text-[#2A190F]/60 text-sm">
-                          Pay Stub • {formatDate(payment.releaseAt)}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      className="bg-[#FCBA2E] text-[#2A190F] hover:bg-[#F1C644]"
-                      size="sm"
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </Button>
-                  </div>
-                ))}
-                {payments.length === 0 && (
-                  <p className="text-[#2A190F]/60 text-sm">
-                    No hay documentos disponibles
-                  </p>
-                )}
+              <div className="flex flex-col items-center justify-center py-12">
+                <FileText className="mb-4 h-16 w-16 text-[#2A190F]/40" />
+                <h3 className="mb-2 font-semibold text-[#2A190F] text-lg">
+                  Coming Soon
+                </h3>
+                <p className="text-center text-[#2A190F]/60 text-sm">
+                  Tax documents and payment receipts will be available soon.
+                </p>
               </div>
             </CardContent>
           </Card>

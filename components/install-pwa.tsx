@@ -107,7 +107,7 @@ export default function InstallPrompt() {
   }
 
   const handleOpenChange = () => {
-    // Modal no se puede cerrar sin decidir
+    // Modal cannot be closed without deciding
   };
 
   return (

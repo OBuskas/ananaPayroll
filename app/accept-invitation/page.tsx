@@ -135,7 +135,7 @@ function AcceptInvitationContent() {
 
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash });
-        toast.success("¡Invitación aceptada exitosamente!");
+        toast.success("Invitation accepted successfully!");
         // Refresh data
         setTimeout(() => {
           window.location.href = `/project/${companyIdParam}`;
@@ -146,7 +146,7 @@ function AcceptInvitationContent() {
       const errorMessage =
         (error as { shortMessage?: string; message?: string })?.shortMessage ||
         (error as { message?: string })?.message ||
-        "Error al aceptar la invitación";
+        "Error accepting invitation";
       toast.error(errorMessage);
     } finally {
       setAccepting(false);
@@ -174,14 +174,14 @@ function AcceptInvitationContent() {
       <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-[#2A190F]">Link Inválido</CardTitle>
+            <CardTitle className="text-[#2A190F]">Invalid Link</CardTitle>
             <CardDescription>
-              El link de invitación no contiene la información necesaria
+              The invitation link does not contain the necessary information
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-[#2A190F]/60 text-sm">
-              Por favor, solicita un nuevo link de invitación al empleador.
+              Please request a new invitation link from the employer.
             </p>
           </CardContent>
         </Card>
@@ -194,15 +194,14 @@ function AcceptInvitationContent() {
       <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-[#2A190F]">Conecta tu Wallet</CardTitle>
+            <CardTitle className="text-[#2A190F]">Connect Your Wallet</CardTitle>
             <CardDescription>
-              Necesitas conectar tu wallet para aceptar la invitación
+              You need to connect your wallet to accept the invitation
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-[#2A190F]/60 text-sm">
-              Por favor, conecta la wallet que recibió la invitación para
-              continuar.
+              Please connect the wallet that received the invitation to continue.
             </p>
           </CardContent>
         </Card>
@@ -219,21 +218,21 @@ function AcceptInvitationContent() {
       <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-[#2A190F]">Wallet Incorrecta</CardTitle>
+            <CardTitle className="text-[#2A190F]">Incorrect Wallet</CardTitle>
             <CardDescription>
-              La wallet conectada no coincide con la invitación
+              The connected wallet does not match the invitation
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="mb-2 text-[#2A190F]/60 text-sm">
-              Esta invitación es para la wallet:
+              This invitation is for the wallet:
             </p>
             <p className="mb-4 break-all font-mono text-[#2A190F] text-xs">
               {employeeAddressParam}
             </p>
             <p className="text-[#2A190F]/60 text-sm">
-              Por favor, desconecta la wallet actual y conecta la wallet
-              correcta para aceptar esta invitación.
+              Please disconnect the current wallet and connect the correct wallet
+              to accept this invitation.
             </p>
           </CardContent>
         </Card>
@@ -247,16 +246,16 @@ function AcceptInvitationContent() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-[#2A190F]">
-              Invitación No Encontrada
+              Invitation Not Found
             </CardTitle>
             <CardDescription>
-              No se encontró una invitación pendiente para esta wallet
+              No pending invitation found for this wallet
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-[#2A190F]/60 text-sm">
-              Verifica que estés usando la wallet correcta o contacta al
-              empleador para una nueva invitación.
+              Verify that you are using the correct wallet or contact the
+              employer for a new invitation.
             </p>
           </CardContent>
         </Card>
@@ -271,10 +270,10 @@ function AcceptInvitationContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#2A190F]">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
-              Invitación Ya Aceptada
+              Invitation Already Accepted
             </CardTitle>
             <CardDescription>
-              Esta invitación ya fue aceptada previamente
+              This invitation was already accepted previously
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -283,7 +282,7 @@ function AcceptInvitationContent() {
                 {invitationData.companyName}
               </p>
               <p className="text-[#2A190F]/60 text-sm">
-                Ya eres parte de esta empresa
+                You are already part of this company
               </p>
             </div>
             <Button
@@ -292,7 +291,7 @@ function AcceptInvitationContent() {
                 window.location.href = `/project/${companyIdParam}`;
               }}
             >
-              Ir al Dashboard
+              Go to Dashboard
             </Button>
           </CardContent>
         </Card>
@@ -307,14 +306,14 @@ function AcceptInvitationContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#2A190F]">
               <XCircle className="h-5 w-5 text-red-600" />
-              Invitación Inactiva
+              Inactive Invitation
             </CardTitle>
-            <CardDescription>Esta invitación ya no está activa</CardDescription>
+            <CardDescription>This invitation is no longer active</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-[#2A190F]/60 text-sm">
-              La invitación ha sido cancelada o desactivada. Contacta al
-              empleador para más información.
+              The invitation has been canceled or deactivated. Contact the
+              employer for more information.
             </p>
           </CardContent>
         </Card>
@@ -328,14 +327,14 @@ function AcceptInvitationContent() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-[#2A190F]">Invitación de Empleo</CardTitle>
+          <CardTitle className="text-[#2A190F]">Job Invitation</CardTitle>
           <CardDescription>
-            Has sido invitado a unirte a una empresa
+            You have been invited to join a company
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <p className="mb-1 text-[#2A190F]/60 text-sm">Empresa</p>
+            <p className="mb-1 text-[#2A190F]/60 text-sm">Company</p>
             <p className="font-semibold text-[#2A190F] text-lg">
               {invitationData.companyName}
             </p>
@@ -343,35 +342,35 @@ function AcceptInvitationContent() {
 
           <div className="space-y-3 rounded-lg border border-[#2A190F]/10 p-4">
             <div className="flex justify-between">
-              <span className="text-[#2A190F]/60 text-sm">Monto por Pago</span>
+              <span className="text-[#2A190F]/60 text-sm">Amount per Payment</span>
               <span className="font-semibold text-[#2A190F]">
                 {formatAmount(invitationData.amount, decimals)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#2A190F]/60 text-sm">
-                Frecuencia de Pago
+                Payment Frequency
               </span>
               <span className="font-semibold text-[#2A190F]">
-                {Number(invitationData.frequency) / (24 * 60 * 60)} días
+                {Number(invitationData.frequency) / (24 * 60 * 60)} days
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#2A190F]/60 text-sm">
-                Período de Bloqueo
+                Lock Period
               </span>
               <span className="font-semibold text-[#2A190F]">
-                {Number(invitationData.lockPeriod) / (24 * 60 * 60)} días
+                {Number(invitationData.lockPeriod) / (24 * 60 * 60)} days
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
             <Badge className="bg-yellow-500/20 text-yellow-700">
-              Pendiente
+              Pending
             </Badge>
             <p className="text-[#2A190F]/60 text-xs">
-              Acepta esta invitación para comenzar a recibir pagos
+              Accept this invitation to start receiving payments
             </p>
           </div>
 
@@ -383,14 +382,14 @@ function AcceptInvitationContent() {
               }}
               variant="outline"
             >
-              Cancelar
+              Cancel
             </Button>
             <Button
               className="flex-1 bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
               disabled={accepting}
               onClick={handleAccept}
             >
-              {accepting ? "Aceptando..." : "Aceptar Invitación"}
+              {accepting ? "Accepting..." : "Accept Invitation"}
             </Button>
           </div>
         </CardContent>

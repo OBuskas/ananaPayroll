@@ -185,13 +185,13 @@ export default function DashboardPage() {
                           {project.name}
                         </CardTitle>
                         <Badge className="border-0 bg-green-500/20 font-normal text-green-700">
-                          Activa
+                          Active
                         </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <p className="text-[#2A190F]/70 text-sm">
-                        Organización registrada en la blockchain
+                        Organization registered on the blockchain
                       </p>
                       <Badge
                         className="border-[#FCBA2E]/30 bg-[#FCBA2E]/20 font-normal text-[#2A190F]"
@@ -250,23 +250,23 @@ export default function DashboardPage() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-[#2A190F]">
-              Crear Organización
+              Create Organization
             </DialogTitle>
             <DialogDescription className="text-[#2A190F]/70">
-              Ingresa el nombre de la organización que deseas crear.
+              Enter the name of the organization you want to create.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label className="text-[#2A190F]" htmlFor="organization-name">
-                Nombre de la Organización
+                Organization Name
               </Label>
               <Input
                 className="text-[#2A190F]"
                 disabled={isLoading}
                 id="organization-name"
                 onChange={(e) => setOrganizationName(e.target.value)}
-                placeholder="Ej: Mi Empresa S.A."
+                placeholder="E.g: My Company Inc."
                 value={organizationName}
               />
             </div>
@@ -278,7 +278,7 @@ export default function DashboardPage() {
               onClick={() => setIsModalOpen(false)}
               variant="outline"
             >
-              Cancelar
+              Cancel
             </Button>
             <Button
               className="bg-[#FCBA2E] text-[#2A190F] hover:bg-[#F1C644]"
@@ -287,7 +287,7 @@ export default function DashboardPage() {
               }
               onClick={handleCreateOrganization}
             >
-              {isLoading ? "Creando..." : "Crear"}
+              {isLoading ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>

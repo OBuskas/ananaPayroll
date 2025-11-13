@@ -249,7 +249,7 @@ export default function EmployerDashboard({
         .map((emp) => emp.wallet as `0x${string}`);
 
       if (activeEmployees.length === 0) {
-        toast.error("No hay empleados activos para procesar la nómina");
+        toast.error("No active employees to process payroll");
         return;
       }
 
@@ -265,7 +265,7 @@ export default function EmployerDashboard({
       }
     } catch (error) {
       console.error("Error running payroll:", error);
-      toast.error("Error al procesar la nómina");
+      toast.error("Error processing payroll");
     } finally {
       setIsRunningPayroll(false);
     }
@@ -282,13 +282,13 @@ export default function EmployerDashboard({
         employeeForm.lockPeriodDays
       )
     ) {
-      toast.error("Por favor completa todos los campos");
+      toast.error("Please complete all fields");
       return;
     }
 
     // Validate wallet address
     if (!WALLET_ADDRESS_REGEX.test(employeeForm.wallet)) {
-      toast.error("Dirección de wallet inválida");
+      toast.error("Invalid wallet address");
       return;
     }
 
@@ -341,7 +341,7 @@ export default function EmployerDashboard({
       const errorMessage =
         (error as { shortMessage?: string; message?: string })?.shortMessage ||
         (error as { message?: string })?.message ||
-        "Error al agregar empleado";
+        "Error adding employee";
       toast.error(errorMessage);
     } finally {
       setIsAddingEmployee(false);
@@ -372,9 +372,9 @@ export default function EmployerDashboard({
     const inviteLink = `${window.location.origin}/accept-invitation?companyId=${companyContractId}&employee=${employeeWallet}`;
     try {
       await navigator.clipboard.writeText(inviteLink);
-      toast.success("Link de invitación copiado al portapapeles");
+      toast.success("Invitation link copied to clipboard");
     } catch {
-      toast.error("Error al copiar el link");
+      toast.error("Error copying link");
     }
   };
 
@@ -402,7 +402,7 @@ export default function EmployerDashboard({
               {totalEmployees}
             </div>
             <p className="text-[#2A190F]/60 text-xs">
-              {employees.filter((e) => e.accepted).length} activos
+              {employees.filter((e) => e.accepted).length} active
             </p>
           </CardContent>
         </Card>
@@ -418,7 +418,7 @@ export default function EmployerDashboard({
             <div className="font-bold text-2xl text-[#2A190F]">
               {formatAmount(BigInt(Math.floor(monthlyPayroll * 1_000_000)), 6)}
             </div>
-            <p className="text-[#2A190F]/60 text-xs">Total estimado mensual</p>
+            <p className="text-[#2A190F]/60 text-xs">Estimated monthly total</p>
           </CardContent>
         </Card>
 
@@ -433,7 +433,7 @@ export default function EmployerDashboard({
             <div className="font-bold text-2xl text-[#2A190F]">
               {pendingApprovals}
             </div>
-            <p className="text-[#2A190F]/60 text-xs">Empleados pendientes</p>
+            <p className="text-[#2A190F]/60 text-xs">Pending employees</p>
           </CardContent>
         </Card>
 
@@ -515,7 +515,7 @@ export default function EmployerDashboard({
                   ))}
                   {payments.length === 0 && (
                     <p className="text-[#2A190F]/60 text-sm">
-                      No hay transacciones recientes
+                      No recent transactions
                     </p>
                   )}
                 </div>
@@ -569,7 +569,7 @@ export default function EmployerDashboard({
               <div className="space-y-4">
                 {employees.length === 0 ? (
                   <p className="text-[#2A190F]/60 text-sm">
-                    No hay empleados registrados
+                    No employees registered
                   </p>
                 ) : (
                   employees.map((employee) => (
@@ -635,7 +635,7 @@ export default function EmployerDashboard({
               <div className="space-y-4">
                 {payments.length === 0 ? (
                   <p className="text-[#2A190F]/60 text-sm">
-                    No hay pagos registrados
+                    No payments registered
                   </p>
                 ) : (
                   payments.map((payment) => (
@@ -680,16 +680,16 @@ export default function EmployerDashboard({
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-[#2A190F]">
-              Agregar Nuevo Empleado
+              Add New Employee
             </DialogTitle>
             <DialogDescription>
-              Ingresa la información del empleado para agregarlo a la nómina
+              Enter employee information to add them to payroll
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label className="text-[#2A190F]" htmlFor="wallet">
-                Dirección de Wallet
+                Wallet Address
               </Label>
               <Input
                 id="wallet"
@@ -702,7 +702,7 @@ export default function EmployerDashboard({
             </div>
             <div className="space-y-2">
               <Label className="text-[#2A190F]" htmlFor="amount">
-                Monto por Pago (USD)
+                Amount per Payment (USD)
               </Label>
               <Input
                 id="amount"
@@ -716,7 +716,7 @@ export default function EmployerDashboard({
             </div>
             <div className="space-y-2">
               <Label className="text-[#2A190F]" htmlFor="frequency">
-                Frecuencia de Pago (días)
+                Payment Frequency (days)
               </Label>
               <Input
                 id="frequency"
@@ -733,7 +733,7 @@ export default function EmployerDashboard({
             </div>
             <div className="space-y-2">
               <Label className="text-[#2A190F]" htmlFor="lockPeriod">
-                Período de Bloqueo (días)
+                Lock Period (days)
               </Label>
               <Input
                 id="lockPeriod"
@@ -755,14 +755,14 @@ export default function EmployerDashboard({
               onClick={() => setIsAddEmployeeOpen(false)}
               variant="outline"
             >
-              Cancelar
+              Cancel
             </Button>
             <Button
               className="bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
               disabled={isAddingEmployee}
               onClick={handleAddEmployee}
             >
-              {isAddingEmployee ? "Agregando..." : "Agregar Empleado"}
+              {isAddingEmployee ? "Adding..." : "Add Employee"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -776,15 +776,15 @@ export default function EmployerDashboard({
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-[#2A190F]">
-              Empleado Agregado Exitosamente
+              Employee Added Successfully
             </DialogTitle>
             <DialogDescription>
-              Comparte este link con el empleado para que acepte la invitación
+              Share this link with the employee to accept the invitation
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-[#2A190F]">Link de Invitación</Label>
+              <Label className="text-[#2A190F]">Invitation Link</Label>
               <div className="flex gap-2">
                 <Input
                   className="font-mono text-xs"
@@ -796,9 +796,9 @@ export default function EmployerDashboard({
                   onClick={async () => {
                     try {
                       await navigator.clipboard.writeText(generatedInviteLink);
-                      toast.success("Link copiado al portapapeles");
+                      toast.success("Link copied to clipboard");
                     } catch {
-                      toast.error("Error al copiar el link");
+                      toast.error("Error copying link");
                     }
                   }}
                   variant="outline"
@@ -816,7 +816,7 @@ export default function EmployerDashboard({
                 window.location.reload();
               }}
             >
-              Cerrar
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

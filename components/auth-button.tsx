@@ -20,6 +20,7 @@ import {
 import { Skeleton } from "./ui/skeleton";
 
 export default function AuthButton() {
+  const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -79,6 +80,14 @@ export default function AuthButton() {
     redirect("/dashboard");
   }
 
+  const handleCopyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -95,9 +104,9 @@ export default function AuthButton() {
           <Wallet className="mr-2 h-4 w-4" />
           <span>Wallet: {connector?.name || "N/A"}</span>
         </DropdownMenuItem>
-        <DropdownMenuItem disabled>
+        <DropdownMenuItem onClick={handleCopyAddress}>
           <span className="text-muted-foreground text-xs">
-            {formatAddress(address)}
+            {copied ? "Copied!" : formatAddress(address)}
           </span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
