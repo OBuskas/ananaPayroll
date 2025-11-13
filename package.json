@@ -7,9 +7,11 @@
     "dev": "next dev",
     "lint": "pnpm dlx ultracite check",
     "fix": "pnpm dlx ultracite fix",
-    "start": "next start"
+    "start": "next start",
+    "fc-start": "tsx scripts/fc-start.ts"
   },
   "dependencies": {
+    "@filoz/synapse-sdk": "^0.35.3",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@tanstack/react-query": "^5.90.7",
@@ -21,6 +23,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "ethers": "^6.15.0",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "16.0.0",
@@ -35,6 +38,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.20.6",
     "vaul": "^0.9.9",
     "viem": "^2.39.0",
     "wagmi": "^2.19.3",

@@ -8,7 +8,6 @@ import Header from "@/components/header";
 import InstallPrompt from "@/components/install-pwa";
 import RegisterSW from "@/components/register-sw";
 import Web3AuthWrapper from "@/context/web3auth";
-import CTASection from "@/components/cta-section";
 
 export const metadata: Metadata = {
   title: "Ananá Payroll - Web3 Payroll Automation",
@@ -56,8 +55,6 @@ export default function RootLayout({
             <Header />
 
             <main className="container mx-auto flex-1 p-6">{children}</main>
-            
-            <CTASection />
 
             <Footer />
 

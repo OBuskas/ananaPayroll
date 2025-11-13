@@ -5,6 +5,7 @@ import {
   Copy,
   DollarSign,
   Download,
+  ExternalLink,
   Send,
   Users,
   Wallet,
@@ -12,7 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { formatUnits, parseUnits } from "viem";
-import { usePublicClient } from "wagmi";
+import { useChainId, usePublicClient, useSwitchChain } from "wagmi";
 import AnanaLoading from "@/components/anana-loading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,8 +34,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContracts } from "@/context/contracts-context";
+import { useDownloadRoot } from "@/hooks/use-download-root";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 type Employee = {
   wallet: string;
@@ -52,6 +62,15 @@ type Payment = {
   amount: bigint;
   releaseAt: bigint;
   claimed: boolean;
+};
+
+type EmployeeDocument = {
+  employee: string;
+  pieceCid: string;
+  fileName: string;
+  fileSize: bigint;
+  uploader: string;
+  uploadedAt: bigint;
 };
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -73,6 +92,8 @@ export default function EmployerDashboard({
     account,
   } = useContracts();
   const publicClient = usePublicClient();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
 
   const [companyName, setCompanyName] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -98,7 +119,50 @@ export default function EmployerDashboard({
 
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Documents
+  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadEmployeeWallet, setUploadEmployeeWallet] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isSwitchingChain, setIsSwitchingChain] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+
+  const FILECOIN_CALIBRATION_CHAIN_ID = 314_159;
+  const isOnFilecoin =
+    chainId === FILECOIN_CALIBRATION_CHAIN_ID || chainId === 314;
+
+  const handleSwitchToFilecoin = async () => {
+    if (!switchChain) {
+      toast.error("Switch chain function not available");
+      return;
+    }
+    try {
+      setIsSwitchingChain(true);
+      await switchChain({ chainId: FILECOIN_CALIBRATION_CHAIN_ID });
+      toast.success("Switched to Filecoin Calibration");
+    } catch (error) {
+      console.error("Error switching to Filecoin:", error);
+      toast.error("Error switching to Filecoin Calibration");
+    } finally {
+      setIsSwitchingChain(false);
+    }
+  };
+  const {
+    uploadFileMutation,
+    uploadedInfo,
+    progress: uploadProgress,
+    status: uploadStatus,
+    handleReset: resetUploadState,
+    isUploadComplete,
+  } = useFileUpload();
+
   useEffect(() => {
+    const SEPOLIA_CHAIN_ID = 11_155_111;
+    // Solo hacer fetch cuando estamos en Sepolia (los contratos solo existen en Sepolia)
+    if (chainId !== SEPOLIA_CHAIN_ID) {
+      return;
+    }
+
     if (
       !(
         companyRegistry &&
@@ -217,6 +281,21 @@ export default function EmployerDashboard({
       return paymentList;
     };
 
+    const fetchCompanyDocuments = async (companyId: bigint) => {
+      if (!employeeRegistry) {
+        return [];
+      }
+      try {
+        const docs = await employeeRegistry.read.getCompanyDocuments([
+          companyId,
+        ]);
+        return docs as unknown as EmployeeDocument[];
+      } catch (e) {
+        console.warn("Error fetching company documents:", e);
+        return [];
+      }
+    };
+
     const fetchVaultBalance = async (companyAdmin: string) => {
       if (!paymentVault) {
         return BigInt(0);
@@ -258,6 +337,9 @@ export default function EmployerDashboard({
 
         const balance = await fetchVaultBalance(company.admin);
         setVaultBalance(balance);
+
+        const docs = await fetchCompanyDocuments(companyId);
+        setDocuments(docs);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -276,6 +358,7 @@ export default function EmployerDashboard({
     account,
     companyContractId,
     publicClient,
+    chainId,
   ]);
 
   const handleRunPayroll = async () => {
@@ -502,6 +585,154 @@ export default function EmployerDashboard({
     }
   };
 
+  const handleOpenUploadDialog = () => {
+    setUploadEmployeeWallet("");
+    setUploadFile(null);
+    resetUploadState();
+    setIsUploadModalOpen(true);
+  };
+
+  const handleUploadFile = async () => {
+    if (!uploadFile) {
+      toast.error("Select a file");
+      return;
+    }
+    if (!uploadEmployeeWallet) {
+      toast.error("Select employee");
+      return;
+    }
+    try {
+      await uploadFileMutation.mutateAsync({ file: uploadFile });
+    } catch (error) {
+      console.error("Upload error:", error);
+      const errorMessage =
+        (error as { shortMessage?: string; message?: string })?.shortMessage ||
+        (error as { message?: string })?.message ||
+        "Error uploading document";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleAssignDocument = async () => {
+    if (isAssigning) {
+      return;
+    }
+    if (!employeeRegistry) {
+      toast.error("Cannot connect to contracts");
+      return;
+    }
+    if (!account) {
+      toast.error("Cannot connect to wallet");
+      return;
+    }
+    const SEPOLIA_CHAIN_ID = 11_155_111;
+
+    if (!uploadedInfo?.pieceCid) {
+      toast.error("No uploaded file found. Please upload a file first.");
+      return;
+    }
+    if (!uploadFile) {
+      toast.error("File information missing");
+      return;
+    }
+    if (!uploadEmployeeWallet) {
+      toast.error("Employee not selected");
+      return;
+    }
+
+    setIsAssigning(true);
+    try {
+      // Switch to Sepolia if not already on it
+      if (chainId !== SEPOLIA_CHAIN_ID) {
+        if (!switchChain) {
+          toast.error("Switch chain function not available");
+          setIsAssigning(false);
+          return;
+        }
+        toast.info("Switching to Sepolia to register document...");
+        await switchChain({ chainId: SEPOLIA_CHAIN_ID });
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+
+      // Assign on-chain
+      const companyId = BigInt(companyContractId);
+      const hash = await employeeRegistry.write.addEmployeeDocument(
+        [
+          companyId,
+          uploadEmployeeWallet as `0x${string}`,
+          uploadedInfo.pieceCid,
+          uploadFile.name,
+          BigInt(uploadFile.size),
+        ],
+        account
+      );
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+        toast.success("Document registered on smart contract");
+        // Refresh docs
+        const docs = await employeeRegistry.read.getCompanyDocuments([
+          companyId,
+        ]);
+        setDocuments(docs as unknown as EmployeeDocument[]);
+        setIsUploadModalOpen(false);
+        resetUploadState();
+        setUploadFile(null);
+        setUploadEmployeeWallet("");
+      }
+    } catch (error) {
+      console.error("Assign error:", error);
+      const errorMessage =
+        (error as { shortMessage?: string; message?: string })?.shortMessage ||
+        (error as { message?: string })?.message ||
+        "Error registering document";
+      toast.error(errorMessage);
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const DocumentRow = ({ doc }: { doc: EmployeeDocument }) => {
+    const { downloadMutation } = useDownloadRoot(doc.pieceCid, doc.fileName);
+    const ext = doc.fileName.includes(".")
+      ? doc.fileName.split(".").pop()
+      : undefined;
+    return (
+      <div className="flex items-center justify-between rounded-lg border border-[#2A190F]/10 p-4">
+        <div className="min-w-0">
+          <p className="truncate font-medium text-[#2A190F]">
+            {doc.fileName}
+            {ext ? "" : ""}
+          </p>
+          <p className="text-[#2A190F]/60 text-xs">
+            Owner: {formatAddress(doc.employee)} • CID:{" "}
+            {doc.pieceCid.slice(0, 8)}...{doc.pieceCid.slice(-6)}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            className="border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+            onClick={() => downloadMutation.mutate()}
+            size="sm"
+            variant="outline"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+          <Button
+            className="border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+            onClick={async () => {
+              await navigator.clipboard.writeText(doc.pieceCid);
+              toast.success("CID copied");
+            }}
+            size="sm"
+            variant="outline"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   if (loadingPage) {
     return <AnanaLoading />;
   }
@@ -614,6 +845,12 @@ export default function EmployerDashboard({
             value="payments"
           >
             Payments
+          </TabsTrigger>
+          <TabsTrigger
+            className="data-[state=active]:bg-[#FCBA2E]"
+            value="documents"
+          >
+            Documents
           </TabsTrigger>
         </TabsList>
 
@@ -820,6 +1057,34 @@ export default function EmployerDashboard({
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent className="space-y-4" value="documents">
+          <Card className="border-[#2A190F]/20 bg-white/50 backdrop-blur">
+            <CardHeader className="flex items-start justify-between sm:flex-row sm:items-center">
+              <div>
+                <CardTitle className="text-[#2A190F]">Documents</CardTitle>
+                <CardDescription>All company documents</CardDescription>
+              </div>
+              <Button
+                className="bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
+                onClick={handleOpenUploadDialog}
+              >
+                Upload Document
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {documents.length === 0 ? (
+                  <p className="text-[#2A190F]/60 text-sm">No documents</p>
+                ) : (
+                  documents.map((d) => (
+                    <DocumentRow doc={d} key={`${d.pieceCid}-${d.employee}`} />
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Add Employee Dialog */}
@@ -911,6 +1176,150 @@ export default function EmployerDashboard({
             >
               {isAddingEmployee ? "Adding..." : "Add Employee"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Document Dialog */}
+      <Dialog
+        onOpenChange={(open) => {
+          // Prevenir que se cierre automáticamente cuando está cambiando de red o subiendo
+          if (!open && (isSwitchingChain || uploadFileMutation.isPending)) {
+            return;
+          }
+          setIsUploadModalOpen(open);
+        }}
+        open={isUploadModalOpen}
+      >
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle className="text-[#2A190F]">
+              Upload Document
+            </DialogTitle>
+            <DialogDescription>
+              Select the employee and the file to upload
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {!(isOnFilecoin || isUploadComplete) && (
+              <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                <p className="mb-2 font-medium text-sm text-yellow-800">
+                  ⚠️ Network switch required
+                </p>
+                <p className="mb-3 text-xs text-yellow-700">
+                  To upload files to Filecoin, you need to switch to Filecoin
+                  Calibration (Chain ID: 314159)
+                </p>
+                <Button
+                  className="w-full bg-yellow-500 font-semibold text-white hover:bg-yellow-600"
+                  disabled={isSwitchingChain}
+                  onClick={handleSwitchToFilecoin}
+                  size="sm"
+                >
+                  {isSwitchingChain
+                    ? "Switching..."
+                    : "Switch to Filecoin Calibration"}
+                </Button>
+              </div>
+            )}
+            {isOnFilecoin && !isUploadComplete && (
+              <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                <p className="text-green-700 text-xs">
+                  ✅ Connected to Filecoin Calibration. You can upload files.
+                </p>
+              </div>
+            )}
+            {isUploadComplete && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                <p className="mb-2 font-medium text-blue-800 text-sm">
+                  ✅ Upload completed successfully
+                </p>
+                <p className="text-blue-700 text-xs">
+                  File has been stored on Filecoin. Switch to Sepolia to
+                  register the document on the smart contract.
+                </p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label className="text-[#2A190F]">Employee</Label>
+              <Select
+                onValueChange={(val) => setUploadEmployeeWallet(val)}
+                value={uploadEmployeeWallet}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((e) => (
+                    <SelectItem key={e.wallet} value={e.wallet}>
+                      {formatAddress(e.wallet)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[#2A190F]">File</Label>
+              <Input
+                accept="*/*"
+                onChange={(ev) => {
+                  const f = ev.target.files?.[0] || null;
+                  setUploadFile(f);
+                }}
+                type="file"
+              />
+              {uploadStatus && (
+                <p className="text-[#2A190F]/60 text-xs">{uploadStatus}</p>
+              )}
+              {uploadFile && (
+                <p className="text-[#2A190F]/60 text-xs">
+                  {uploadFile.name} • {Math.ceil(uploadFile.size / 1024)} KB •{" "}
+                  {uploadProgress}%
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            {isUploadComplete ? (
+              <>
+                <Button
+                  className="border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+                  onClick={() => setIsUploadModalOpen(false)}
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
+                  disabled={!(employeeRegistry && account) || isAssigning}
+                  onClick={handleAssignDocument}
+                >
+                  {isAssigning ? "Assigning..." : "Assign to Employee"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  className="border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+                  onClick={() => setIsUploadModalOpen(false)}
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
+                  disabled={
+                    uploadFileMutation.isPending ||
+                    !isOnFilecoin ||
+                    !uploadFile ||
+                    !uploadEmployeeWallet
+                  }
+                  onClick={handleUploadFile}
+                >
+                  {uploadFileMutation.isPending ? "Uploading..." : "Upload"}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

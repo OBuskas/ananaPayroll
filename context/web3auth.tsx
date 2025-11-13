@@ -8,6 +8,7 @@ import {
 } from "@web3auth/modal/react";
 import { WagmiProvider } from "@web3auth/modal/react/wagmi";
 import { ContractsProvider } from "./contracts-context";
+import { ConfigProvider } from "./providers";
 
 const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID || "";
 
@@ -32,9 +33,11 @@ export default function Web3AuthWrapper({
   return (
     <Web3AuthProvider config={web3AuthContextConfig}>
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider>
-          <ContractsProvider>{children}</ContractsProvider>
-        </WagmiProvider>
+        <ConfigProvider>
+          <WagmiProvider>
+            <ContractsProvider>{children}</ContractsProvider>
+          </WagmiProvider>
+        </ConfigProvider>
       </QueryClientProvider>
     </Web3AuthProvider>
   );

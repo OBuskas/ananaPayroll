@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const fs = require("fs");
+const fs = require("node:fs");
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();

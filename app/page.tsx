@@ -4,7 +4,6 @@ import FeaturesSection from "@/components/features-section";
 import HeroSection from "@/components/hero-section";
 import HowItWorksSection from "@/components/how-it-works-section";
 import TabsSection from "@/components/tabs-section";
-import TrustedSection from "@/components/trusted-section";
 
 export default function Home() {
   return (
@@ -13,6 +12,7 @@ export default function Home() {
       <TabsSection />
       <FeaturesSection />
       <HowItWorksSection />
+      <CTASection />
       {/* <TrustedSection /> */}
       <FAQSection />
     </div>

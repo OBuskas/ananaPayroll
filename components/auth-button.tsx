@@ -7,7 +7,8 @@ import {
 import { LogOut, Network, UserCircleIcon, Wallet } from "lucide-react";
 import { redirect, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useAccount, useChainId } from "wagmi";
+import { toast } from "sonner";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -37,8 +38,13 @@ export default function AuthButton() {
   const { disconnect, loading: disconnectLoading } = useWeb3AuthDisconnect();
   const { address, connector } = useAccount();
   const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
 
   const isLoading = connectLoading || disconnectLoading;
+  const isDevMode = process.env.NODE_ENV === "development";
+
+  const FILECOIN_CALIBRATION_CHAIN_ID = 314_159;
+  const SEPOLIA_CHAIN_ID = 11_155_111;
 
   const formatAddress = (addr: string | undefined) => {
     if (!addr) {
@@ -55,8 +61,24 @@ export default function AuthButton() {
       8453: "Base",
       11155111: "Sepolia",
       80002: "Polygon Amoy",
+      314159: "Filecoin Calibration",
+      314: "Filecoin Mainnet",
     };
     return chains[id] || `Chain ${id}`;
+  };
+
+  const handleSwitchChain = async (targetChainId: number) => {
+    if (!switchChain) {
+      toast.error("Switch chain function not available");
+      return;
+    }
+    try {
+      await switchChain({ chainId: targetChainId });
+      toast.success(`Cambiado a ${getChainName(targetChainId)}`);
+    } catch (error) {
+      console.error("Error switching chain:", error);
+      toast.error("Error al cambiar de red");
+    }
   };
 
   const handleDisconnect = () => {
@@ -100,6 +122,28 @@ export default function AuthButton() {
           <Network className="mr-2 h-4 w-4" />
           <span>Network: {getChainName(chainId)}</span>
         </DropdownMenuItem>
+        {isDevMode && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Switch Network (Dev)</DropdownMenuLabel>
+            {chainId !== SEPOLIA_CHAIN_ID && (
+              <DropdownMenuItem
+                onClick={() => handleSwitchChain(SEPOLIA_CHAIN_ID)}
+              >
+                <Network className="mr-2 h-4 w-4" />
+                <span>Switch to Sepolia</span>
+              </DropdownMenuItem>
+            )}
+            {chainId !== FILECOIN_CALIBRATION_CHAIN_ID && (
+              <DropdownMenuItem
+                onClick={() => handleSwitchChain(FILECOIN_CALIBRATION_CHAIN_ID)}
+              >
+                <Network className="mr-2 h-4 w-4" />
+                <span>Switch to Filecoin Calibration</span>
+              </DropdownMenuItem>
+            )}
+          </>
+        )}
         <DropdownMenuItem disabled>
           <Wallet className="mr-2 h-4 w-4" />
           <span>Wallet: {connector?.name || "N/A"}</span>

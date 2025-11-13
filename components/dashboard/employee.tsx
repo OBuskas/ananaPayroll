@@ -2,8 +2,10 @@
 
 import {
   Calendar,
+  Copy,
   DollarSign,
   Download,
+  ExternalLink,
   FileText,
   Settings,
   TrendingUp,
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContracts } from "@/context/contracts-context";
+import { useDownloadRoot } from "@/hooks/use-download-root";
 
 type Employee = {
   wallet: string;
@@ -42,6 +45,15 @@ type Payment = {
   amount: bigint;
   releaseAt: bigint;
   claimed: boolean;
+};
+
+type EmployeeDocument = {
+  employee: string;
+  pieceCid: string;
+  fileName: string;
+  fileSize: bigint;
+  uploader: string;
+  uploadedAt: bigint;
 };
 
 export default function EmployeeDashboard({
@@ -73,6 +85,7 @@ export default function EmployeeDashboard({
   );
 
   const [activeTab, setActiveTab] = useState("overview");
+  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
 
   const fetchCompanyName = useCallback(
     async (companyId: bigint) => {
@@ -182,6 +195,25 @@ export default function EmployeeDashboard({
     }
   }, [mockUSDT, address]);
 
+  const fetchEmployeeDocuments = useCallback(
+    async (companyId: bigint) => {
+      if (!(employeeRegistry && address)) {
+        return;
+      }
+      try {
+        const docs = await employeeRegistry.read.getEmployeeDocuments([
+          companyId,
+          address,
+        ]);
+        console.log("docs", docs);
+        setDocuments(docs as unknown as EmployeeDocument[]);
+      } catch (e) {
+        console.warn("Error fetching docs:", e);
+      }
+    },
+    [employeeRegistry, address]
+  );
+
   useEffect(() => {
     if (
       !(
@@ -221,6 +253,7 @@ export default function EmployeeDashboard({
         const claimedPayments = paymentList.filter((p) => p.claimed);
         await processPayments(paymentList, claimedPayments);
         await fetchUsdtBalance();
+        await fetchEmployeeDocuments(companyId);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -672,24 +705,56 @@ export default function EmployeeDashboard({
           <Card>
             <CardHeader>
               <CardTitle className="text-[#2A190F]">Your Documents</CardTitle>
-              <CardDescription>
-                Access your employment documents
-              </CardDescription>
+              <CardDescription>Files assigned to you</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-12">
-                <FileText className="mb-4 h-16 w-16 text-[#2A190F]/40" />
-                <h3 className="mb-2 font-semibold text-[#2A190F] text-lg">
-                  Coming Soon
-                </h3>
-                <p className="text-center text-[#2A190F]/60 text-sm">
-                  Tax documents and payment receipts will be available soon.
-                </p>
+              <div className="space-y-3">
+                {documents.length === 0 ? (
+                  <p className="text-[#2A190F]/60 text-sm">No documents</p>
+                ) : (
+                  documents.map((doc) => (
+                    <EmployeeDocRow doc={doc} key={doc.pieceCid} />
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function EmployeeDocRow({ doc }: { doc: EmployeeDocument }) {
+  const { downloadMutation } = useDownloadRoot(doc.pieceCid, doc.fileName);
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-[#2A190F]/10 p-4">
+      <div className="min-w-0">
+        <p className="truncate font-medium text-[#2A190F]">{doc.fileName}</p>
+        <p className="text-[#2A190F]/60 text-xs">
+          CID: {doc.pieceCid.slice(0, 8)}...{doc.pieceCid.slice(-6)}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          className="border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+          onClick={() => downloadMutation.mutate()}
+          size="sm"
+          variant="outline"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
+        <Button
+          className="border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+          onClick={async () => {
+            await navigator.clipboard.writeText(doc.pieceCid);
+          }}
+          size="sm"
+          variant="outline"
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

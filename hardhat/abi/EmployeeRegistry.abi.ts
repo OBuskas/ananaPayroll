@@ -86,6 +86,49 @@ export const EmployeeRegistryAbi = [
     type: "event",
   },
   {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "companyId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "employee",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "pieceCid",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "fileName",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "fileSize",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "uploader",
+        type: "address",
+      },
+    ],
+    name: "DocumentAdded",
+    type: "event",
+  },
+  {
     inputs: [
       {
         internalType: "uint256",
@@ -94,6 +137,39 @@ export const EmployeeRegistryAbi = [
       },
     ],
     name: "acceptJob",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "companyId",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "employeeWallet",
+        type: "address",
+      },
+      {
+        internalType: "string",
+        name: "pieceCid",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "fileName",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "fileSize",
+        type: "uint256",
+      },
+    ],
+    name: "addEmployeeDocument",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -193,6 +269,113 @@ export const EmployeeRegistryAbi = [
         internalType: "bool",
         name: "active",
         type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "companyId",
+        type: "uint256",
+      },
+    ],
+    name: "getCompanyDocuments",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "employee",
+            type: "address",
+          },
+          {
+            internalType: "string",
+            name: "pieceCid",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "fileName",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "fileSize",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "uploader",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "uploadedAt",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct EmployeeRegistry.EmployeeDocument[]",
+        name: "",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "companyId",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "employeeWallet",
+        type: "address",
+      },
+    ],
+    name: "getEmployeeDocuments",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "employee",
+            type: "address",
+          },
+          {
+            internalType: "string",
+            name: "pieceCid",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "fileName",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "fileSize",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "uploader",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "uploadedAt",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct EmployeeRegistry.EmployeeDocument[]",
+        name: "",
+        type: "tuple[]",
       },
     ],
     stateMutability: "view",
