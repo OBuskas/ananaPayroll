@@ -1,9 +1,9 @@
 {
   "network": "sepolia",
-  "USDT": "0x32018138F116694D903f9E47b2Eaf85001C76f35",
-  "CompanyRegistry": "0xc0f8973F20E55a62869C2a68B9a307042CEA449a",
-  "EmployeeRegistry": "0x6b85Ae79f19De4bdF011878F91cBE7714e935969",
-  "PaymentVault": "0x8ef64FFDf577461976b978411679f1e64dc84fa6",
-  "PayrollManager": "0x8e2CBc1dE90BDe9F3328cD1e52683Fcc7D6ec2E6",
+  "MockUSDT": "0xc4de6a47312f30590f550f779eef8e28aa28cba4",
+  "CompanyRegistry": "0xa7bc46bf8b5f3a44d2274426c4e94ba31e1ea2b6",
+  "EmployeeRegistry": "0x2db5170de825ab0f3d3c9a7d49246051bb9b3ba4",
+  "PaymentVault": "0xdfe3e8a64915c1336a106e79baec246c251972e6",
+  "PayrollManager": "0x9d51b1f7884c770e1a5db4df58ea50746f8dd675",
   "timestamp": "2025-11-12T00:01:39.420Z"
 }

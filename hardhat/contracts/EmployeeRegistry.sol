@@ -16,8 +16,21 @@ contract EmployeeRegistry {
         bool active;          // NEW: employee can be terminated
     }
 
+    struct EmployeeDocument {
+        address employee;
+        string pieceCid;
+        string fileName;
+        uint256 fileSize;
+        address uploader;
+        uint256 uploadedAt;
+    }
+
     // companyId => employeeWallet => Employee
     mapping(uint256 => mapping(address => Employee)) public employees;
+    // companyId => employeeWallet => EmployeeDocument[]
+    mapping(uint256 => mapping(address => EmployeeDocument[])) public employeeDocuments;
+    // companyId => EmployeeDocument[]
+    mapping(uint256 => EmployeeDocument[]) public companyDocuments;
 
     event EmployeeAdded(
         uint256 indexed companyId,
@@ -35,6 +48,15 @@ contract EmployeeRegistry {
     event EmployeeTerminated(
         uint256 indexed companyId,
         address indexed employee
+    );
+
+    event DocumentAdded(
+        uint256 indexed companyId,
+        address indexed employee,
+        string pieceCid,
+        string fileName,
+        uint256 fileSize,
+        address indexed uploader
     );
 
     constructor(address companyRegistryAddr) {
@@ -95,6 +117,49 @@ contract EmployeeRegistry {
         emp.active = false;
 
         emit EmployeeTerminated(companyId, employeeWallet);
+    }
+
+    function addEmployeeDocument(
+        uint256 companyId,
+        address employeeWallet,
+        string calldata pieceCid,
+        string calldata fileName,
+        uint256 fileSize
+    ) external onlyCompanyAdmin(companyId) {
+        require(employeeWallet != address(0), "Invalid wallet");
+        Employee storage emp = employees[companyId][employeeWallet];
+        require(emp.exists, "Employee not found");
+        require(emp.active, "Employee inactive");
+
+        EmployeeDocument memory doc = EmployeeDocument({
+            employee: employeeWallet,
+            pieceCid: pieceCid,
+            fileName: fileName,
+            fileSize: fileSize,
+            uploader: msg.sender,
+            uploadedAt: block.timestamp
+        });
+
+        employeeDocuments[companyId][employeeWallet].push(doc);
+        companyDocuments[companyId].push(doc);
+
+        emit DocumentAdded(companyId, employeeWallet, pieceCid, fileName, fileSize, msg.sender);
+    }
+
+    function getEmployeeDocuments(uint256 companyId, address employeeWallet)
+        external
+        view
+        returns (EmployeeDocument[] memory)
+    {
+        return employeeDocuments[companyId][employeeWallet];
+    }
+
+    function getCompanyDocuments(uint256 companyId)
+        external
+        view
+        returns (EmployeeDocument[] memory)
+    {
+        return companyDocuments[companyId];
     }
 
     function getEmployee(uint256 companyId, address employeeWallet)

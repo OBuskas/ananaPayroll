@@ -7,6 +7,8 @@ import {
   Web3AuthProvider,
 } from "@web3auth/modal/react";
 import { WagmiProvider } from "@web3auth/modal/react/wagmi";
+import { ContractsProvider } from "./contracts-context";
+import { ConfigProvider } from "./providers";
 
 const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID || "";
 
@@ -15,6 +17,7 @@ const queryClient = new QueryClient();
 const web3AuthOptions: Web3AuthOptions = {
   clientId,
   web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+  defaultChainId: "0xaa36a7",
   ssr: true,
 };
 
@@ -30,7 +33,11 @@ export default function Web3AuthWrapper({
   return (
     <Web3AuthProvider config={web3AuthContextConfig}>
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider>{children}</WagmiProvider>
+        <ConfigProvider>
+          <WagmiProvider>
+            <ContractsProvider>{children}</ContractsProvider>
+          </WagmiProvider>
+        </ConfigProvider>
       </QueryClientProvider>
     </Web3AuthProvider>
   );

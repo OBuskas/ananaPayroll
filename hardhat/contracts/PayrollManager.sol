@@ -40,7 +40,29 @@ contract PayrollManager {
         address[] calldata employeeWallets
     ) external onlyCompanyAdmin(companyId) {
         uint256 paymentsCreated = 0;
+        uint256 totalAmount = 0;
+        address companyAdmin = msg.sender;
 
+        // First pass: calculate total amount needed
+        for (uint256 i = 0; i < employeeWallets.length; i++) {
+            address employeeWallet = employeeWallets[i];
+
+            // Get employee data
+            EmployeeRegistry.Employee memory emp =
+                employeeRegistry.getEmployee(companyId, employeeWallet);
+
+            if (!emp.exists) continue;       // skip invalid
+            if (!emp.accepted) continue;     // skip unaccepted
+            if (!emp.active) continue;       // NEW: skip terminated employees
+
+            totalAmount += emp.amount;
+        }
+
+        // Verify company has sufficient balance in vault
+        uint256 companyBalance = paymentVault.getCompanyBalance(companyAdmin);
+        require(companyBalance >= totalAmount, "Insufficient funds in vault");
+
+        // Second pass: create payments
         for (uint256 i = 0; i < employeeWallets.length; i++) {
             address employeeWallet = employeeWallets[i];
 
@@ -55,9 +77,9 @@ contract PayrollManager {
             // Compute release time
             uint256 releaseAt = block.timestamp + emp.lockPeriod;
 
-            // Create payment in vault
+            // Create payment in vault (this will deduct from balance)
             paymentVault.createPayment(
-                msg.sender,        // company admin wallet
+                companyAdmin,        // company admin wallet
                 employeeWallet,
                 emp.amount,
                 releaseAt
