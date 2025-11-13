@@ -348,7 +348,7 @@ export default function EmployeeDashboard({
     );
   }
 
-  const decimals = 6; // USDT typically has 6 decimals
+  const decimals = 6; // MockUSDT has 6 decimals
 
   return (
     <div className="h-full w-full">

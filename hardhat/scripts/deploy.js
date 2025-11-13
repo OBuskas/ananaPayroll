@@ -19,15 +19,19 @@ async function main() {
 
   // 2. CompanyRegistry
   console.log("Deploying CompanyRegistry...");
-  const CompanyRegistry = await hre.ethers.getContractFactory("CompanyRegistry");
+  const CompanyRegistry =
+    await hre.ethers.getContractFactory("CompanyRegistry");
   const companyRegistry = await CompanyRegistry.deploy();
   await companyRegistry.waitForDeployment();
   console.log("CompanyRegistry deployed at:", companyRegistry.target);
 
   // 3. EmployeeRegistry
   console.log("Deploying EmployeeRegistry...");
-  const EmployeeRegistry = await hre.ethers.getContractFactory("EmployeeRegistry");
-  const employeeRegistry = await EmployeeRegistry.deploy(companyRegistry.target);
+  const EmployeeRegistry =
+    await hre.ethers.getContractFactory("EmployeeRegistry");
+  const employeeRegistry = await EmployeeRegistry.deploy(
+    companyRegistry.target
+  );
   await employeeRegistry.waitForDeployment();
   console.log("EmployeeRegistry deployed at:", employeeRegistry.target);
 
@@ -57,12 +61,12 @@ async function main() {
   // Save deployed addresses
   const data = {
     network: "sepolia",
-    USDT: usdt.target,
+    MockUSDT: usdt.target,
     CompanyRegistry: companyRegistry.target,
     EmployeeRegistry: employeeRegistry.target,
     PaymentVault: vault.target,
     PayrollManager: manager.target,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 
   fs.writeFileSync("deployed.json", JSON.stringify(data, null, 2));

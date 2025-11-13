@@ -18,6 +18,7 @@ contract PaymentVault {
 
     uint256 public nextPaymentId;
     mapping(uint256 => Payment) public payments;
+    mapping(address => uint256) public companyBalances;
 
     event PaymentCreated(
         uint256 indexed paymentId,
@@ -33,6 +34,8 @@ contract PaymentVault {
         uint256 amount
     );
 
+    event FundsDeposited(address indexed company, uint256 amount);
+
     modifier onlyPayrollManager() {
         require(msg.sender == payrollManager, "Not payroll manager");
         _;
@@ -47,6 +50,29 @@ contract PaymentVault {
         payrollManager = manager;
     }
 
+    /**
+     * Deposit funds to the vault for payroll payments
+     * Company must approve this contract to spend USDT first
+     */
+    function deposit(uint256 amount) external {
+        require(amount > 0, "Amount must be greater than 0");
+        require(
+            usdt.transferFrom(msg.sender, address(this), amount),
+            "USDT transfer failed"
+        );
+        companyBalances[msg.sender] += amount;
+        emit FundsDeposited(msg.sender, amount);
+    }
+
+    /**
+     * Get the available balance for a company
+     */
+    function getCompanyBalance(
+        address company
+    ) external view returns (uint256) {
+        return companyBalances[company];
+    }
+
     // PayrollManager calls this to create a scheduled payment
     function createPayment(
         address company,
@@ -57,6 +83,10 @@ contract PaymentVault {
         require(employee != address(0), "Invalid employee");
         require(amount > 0, "Invalid amount");
         require(releaseAt > block.timestamp, "Invalid release time");
+        require(companyBalances[company] >= amount, "Insufficient balance");
+
+        // Deduct from company balance
+        companyBalances[company] -= amount;
 
         paymentId = nextPaymentId++;
 
@@ -79,19 +109,19 @@ contract PaymentVault {
         require(!p.claimed, "Already claimed");
         require(p.employee == msg.sender, "Not employee");
         require(block.timestamp >= p.releaseAt, "Locked");
-        
+
         p.claimed = true;
 
-        require(
-            usdt.transfer(p.employee, p.amount),
-            "USDT transfer failed"
-        );
+        require(usdt.transfer(p.employee, p.amount), "USDT transfer failed");
 
         emit PaymentClaimed(paymentId, p.employee, p.amount);
     }
 
     // Used by relayer for gasless claims
-    function claimFor(uint256 paymentId, address employee) external onlyPayrollManager {
+    function claimFor(
+        uint256 paymentId,
+        address employee
+    ) external onlyPayrollManager {
         Payment storage p = payments[paymentId];
 
         require(!p.claimed, "Already claimed");
@@ -100,10 +130,7 @@ contract PaymentVault {
 
         p.claimed = true;
 
-        require(
-            usdt.transfer(employee, p.amount),
-            "USDT transfer failed"
-        );
+        require(usdt.transfer(employee, p.amount), "USDT transfer failed");
 
         emit PaymentClaimed(paymentId, employee, p.amount);
     }

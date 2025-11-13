@@ -1,6 +1,14 @@
 "use client";
 
-import { Clock, Copy, DollarSign, Download, Send, Users } from "lucide-react";
+import {
+  Clock,
+  Copy,
+  DollarSign,
+  Download,
+  Send,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { formatUnits, parseUnits } from "viem";
@@ -83,6 +91,10 @@ export default function EmployerDashboard({
     frequencyDays: "",
     lockPeriodDays: "",
   });
+  const [vaultBalance, setVaultBalance] = useState<bigint>(BigInt(0));
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isDepositing, setIsDepositing] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
 
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -105,6 +117,44 @@ export default function EmployerDashboard({
       const company = await companyRegistry.read.getCompany([companyId]);
       setCompanyName(company.name);
       return company;
+    };
+
+    const extractEmployeeAddresses = (events: unknown[]): Set<string> => {
+      const addresses = new Set<string>();
+      for (const event of events) {
+        const eventWithArgs = event as { args?: { employee?: unknown } };
+        if (eventWithArgs.args?.employee) {
+          addresses.add(eventWithArgs.args.employee as string);
+        }
+      }
+      return addresses;
+    };
+
+    const fetchEmployeeData = async (
+      companyId: bigint,
+      empAddress: string
+    ): Promise<Employee | null> => {
+      try {
+        const employee = await employeeRegistry.read.getEmployee([
+          companyId,
+          empAddress as `0x${string}`,
+        ]);
+
+        if (employee.exists && employee.active) {
+          return {
+            wallet: empAddress,
+            amount: employee.amount,
+            frequency: employee.frequency,
+            lockPeriod: employee.lockPeriod,
+            accepted: employee.accepted,
+            active: employee.active,
+          };
+        }
+        return null;
+      } catch (err) {
+        console.warn("Error fetching employee:", err);
+        return null;
+      }
     };
 
     const fetchEmployees = async (
@@ -130,37 +180,13 @@ export default function EmployerDashboard({
         fromBlock: "earliest",
       });
 
-      const employeeAddresses = new Set<string>();
-      for (const event of employeeAddedEvents) {
-        if (event.args.employee) {
-          employeeAddresses.add(event.args.employee as string);
-        }
-      }
+      const employeeAddresses = extractEmployeeAddresses(employeeAddedEvents);
+      const employeePromises = Array.from(employeeAddresses).map((empAddress) =>
+        fetchEmployeeData(companyId, empAddress)
+      );
+      const employeeResults = await Promise.all(employeePromises);
 
-      const employeeList: Employee[] = [];
-      for (const empAddress of employeeAddresses) {
-        try {
-          const employee = await employeeRegistry.read.getEmployee([
-            companyId,
-            empAddress as `0x${string}`,
-          ]);
-
-          if (employee.exists && employee.active) {
-            employeeList.push({
-              wallet: empAddress,
-              amount: employee.amount,
-              frequency: employee.frequency,
-              lockPeriod: employee.lockPeriod,
-              accepted: employee.accepted,
-              active: employee.active,
-            });
-          }
-        } catch (err) {
-          console.warn("Error fetching employee:", err);
-        }
-      }
-
-      return employeeList;
+      return employeeResults.filter((emp): emp is Employee => emp !== null);
     };
 
     const fetchPayments = async (companyAdmin: string) => {
@@ -191,6 +217,21 @@ export default function EmployerDashboard({
       return paymentList;
     };
 
+    const fetchVaultBalance = async (companyAdmin: string) => {
+      if (!paymentVault) {
+        return BigInt(0);
+      }
+      try {
+        const balance = await paymentVault.read.getCompanyBalance([
+          companyAdmin as `0x${string}`,
+        ]);
+        return balance;
+      } catch (error) {
+        console.error("Error fetching vault balance:", error);
+        return BigInt(0);
+      }
+    };
+
     const fetchData = async () => {
       try {
         setLoadingPage(true);
@@ -214,6 +255,9 @@ export default function EmployerDashboard({
 
         const pending = employeeList.filter((emp) => !emp.accepted).length;
         setPendingApprovals(pending);
+
+        const balance = await fetchVaultBalance(company.admin);
+        setVaultBalance(balance);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -235,7 +279,15 @@ export default function EmployerDashboard({
   ]);
 
   const handleRunPayroll = async () => {
-    if (!(payrollManager && account && employeeRegistry && address)) {
+    if (
+      !(
+        payrollManager &&
+        account &&
+        employeeRegistry &&
+        address &&
+        paymentVault
+      )
+    ) {
       return;
     }
 
@@ -253,6 +305,21 @@ export default function EmployerDashboard({
         return;
       }
 
+      // Calculate total amount needed
+      const totalAmount = activeEmployees.reduce((sum, empWallet) => {
+        const emp = employees.find((e) => e.wallet === empWallet);
+        return sum + (emp?.amount || BigInt(0));
+      }, BigInt(0));
+
+      // Check vault balance
+      const balance = await paymentVault.read.getCompanyBalance([address]);
+      if (balance < totalAmount) {
+        toast.error(
+          `Insufficient funds. Required: ${formatAmount(totalAmount)}, Available: ${formatAmount(balance)}`
+        );
+        return;
+      }
+
       const hash = await payrollManager.write.createPayrollRun(
         [companyId, activeEmployees],
         account
@@ -265,9 +332,66 @@ export default function EmployerDashboard({
       }
     } catch (error) {
       console.error("Error running payroll:", error);
-      toast.error("Error processing payroll");
+      const errorMessage =
+        (error as { shortMessage?: string; message?: string })?.shortMessage ||
+        (error as { message?: string })?.message ||
+        "Error processing payroll";
+      toast.error(errorMessage);
     } finally {
       setIsRunningPayroll(false);
+    }
+  };
+
+  const handleDeposit = async () => {
+    if (!(paymentVault && mockUSDT && account && address)) {
+      toast.error("Cannot connect to contracts");
+      return;
+    }
+
+    if (!depositAmount || Number.parseFloat(depositAmount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    try {
+      setIsDepositing(true);
+      const decimals = (await mockUSDT.read.decimals()) || BigInt(6);
+      const amount = parseUnits(depositAmount, Number(decimals));
+
+      // First, approve the vault to spend USDT
+      toast.loading("Approving USDT...", { id: "approve" });
+      const vaultAddress = paymentVault.address;
+      const approveHash = await mockUSDT.write.approve(
+        [vaultAddress, amount],
+        account
+      );
+
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+        toast.success("USDT approved", { id: "approve" });
+
+        // Then deposit
+        toast.loading("Depositing funds...", { id: "deposit" });
+        const depositHash = await paymentVault.write.deposit([amount], account);
+        await publicClient.waitForTransactionReceipt({ hash: depositHash });
+        toast.success("Funds deposited successfully!", { id: "deposit" });
+
+        // Refresh balance
+        const balance = await paymentVault.read.getCompanyBalance([address]);
+        setVaultBalance(balance);
+        setDepositAmount("");
+        setIsDepositModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Error depositing funds:", error);
+      const errorMessage =
+        (error as { shortMessage?: string; message?: string })?.shortMessage ||
+        (error as { message?: string })?.message ||
+        "Error depositing funds";
+      toast.error(errorMessage, { id: "deposit" });
+      toast.error(errorMessage, { id: "approve" });
+    } finally {
+      setIsDepositing(false);
     }
   };
 
@@ -389,7 +513,7 @@ export default function EmployerDashboard({
       </h1>
 
       {/* Stats Cards */}
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
+      <div className="mb-8 grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="font-medium text-[#2A190F] text-sm">
@@ -434,6 +558,21 @@ export default function EmployerDashboard({
               {pendingApprovals}
             </div>
             <p className="text-[#2A190F]/60 text-xs">Pending employees</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="font-medium text-[#2A190F] text-sm">
+              Vault Balance
+            </CardTitle>
+            <Wallet className="h-4 w-4 text-[#2A190F]/60" />
+          </CardHeader>
+          <CardContent>
+            <div className="font-bold text-2xl text-[#2A190F]">
+              {formatAmount(vaultBalance)}
+            </div>
+            <p className="text-[#2A190F]/60 text-xs">Available for payroll</p>
           </CardContent>
         </Card>
 
@@ -538,6 +677,14 @@ export default function EmployerDashboard({
                 >
                   <Send className="mr-2 h-4 w-4" />
                   {isRunningPayroll ? "Processing..." : "Run Payroll"}
+                </Button>
+                <Button
+                  className="w-full justify-start border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+                  onClick={() => setIsDepositModalOpen(true)}
+                  variant="outline"
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Deposit Funds
                 </Button>
                 <Button
                   className="w-full justify-start border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
@@ -817,6 +964,54 @@ export default function EmployerDashboard({
               }}
             >
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Deposit Funds Dialog */}
+      <Dialog onOpenChange={setIsDepositModalOpen} open={isDepositModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-[#2A190F]">Deposit Funds</DialogTitle>
+            <DialogDescription>
+              Add USDT to your vault balance for payroll payments
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-[#2A190F]" htmlFor="depositAmount">
+                Amount (USD)
+              </Label>
+              <Input
+                id="depositAmount"
+                onChange={(e) => setDepositAmount(e.target.value)}
+                placeholder="1000.00"
+                type="number"
+                value={depositAmount}
+              />
+            </div>
+            <div className="rounded-lg bg-[#2A190F]/5 p-3">
+              <p className="text-[#2A190F]/60 text-sm">Current Vault Balance</p>
+              <p className="font-semibold text-[#2A190F] text-lg">
+                {formatAmount(vaultBalance)}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="border-[#2A190F]/20 bg-transparent hover:bg-[#2A190F]/5"
+              onClick={() => setIsDepositModalOpen(false)}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#FCBA2E] font-semibold text-[#2A190F] shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
+              disabled={isDepositing}
+              onClick={handleDeposit}
+            >
+              {isDepositing ? "Processing..." : "Deposit"}
             </Button>
           </DialogFooter>
         </DialogContent>

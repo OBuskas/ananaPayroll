@@ -1,10 +1,10 @@
 const { expect } = require("chai");
 
-describe("PaymentVault", function () {
+describe("PaymentVault", () => {
   let usdt, vault, payrollManager;
   let admin, company, employee, relayer;
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     [admin, company, employee, relayer] = await ethers.getSigners();
 
     // Deploy Mock USDT
@@ -25,7 +25,7 @@ describe("PaymentVault", function () {
     await usdt.transfer(vault.target, 1_000_000n); // 1 USDT = 1e6 units
   });
 
-  it("should create a payment", async function () {
+  it("should create a payment", async () => {
     const now = (await ethers.provider.getBlock("latest")).timestamp;
     const release = now + 1000;
 
@@ -44,7 +44,7 @@ describe("PaymentVault", function () {
     expect(payment.claimed).to.equal(false);
   });
 
-  it("should allow direct claim by employee after release time", async function () {
+  it("should allow direct claim by employee after release time", async () => {
     const now = (await ethers.provider.getBlock("latest")).timestamp;
     const release = now + 2;
 
@@ -71,7 +71,7 @@ describe("PaymentVault", function () {
     expect(payment.claimed).to.equal(true);
   });
 
-  it("should NOT allow claim before release time", async function () {
+  it("should NOT allow claim before release time", async () => {
     const now = (await ethers.provider.getBlock("latest")).timestamp;
     const release = now + 1000;
 
@@ -79,12 +79,10 @@ describe("PaymentVault", function () {
       .connect(admin)
       .createPayment(company.address, employee.address, 100_000, release);
 
-    await expect(vault.connect(employee).claim(0)).to.be.revertedWith(
-      "Locked"
-    );
+    await expect(vault.connect(employee).claim(0)).to.be.revertedWith("Locked");
   });
 
-  it("should allow claimFor by payroll manager (relayer)", async function () {
+  it("should allow claimFor by payroll manager (relayer)", async () => {
     const now = (await ethers.provider.getBlock("latest")).timestamp;
     const release = now + 2;
 
@@ -100,9 +98,7 @@ describe("PaymentVault", function () {
     const beforeBalance = await usdt.balanceOf(employee.address);
 
     // claimFor simulates gasless claim
-    const tx = await vault
-      .connect(admin)
-      .claimFor(0, employee.address);
+    const tx = await vault.connect(admin).claimFor(0, employee.address);
     await tx.wait();
 
     const afterBalance = await usdt.balanceOf(employee.address);
@@ -113,7 +109,7 @@ describe("PaymentVault", function () {
     expect(payment.claimed).to.equal(true);
   });
 
-  it("should NOT allow double claim", async function () {
+  it("should NOT allow double claim", async () => {
     const now = (await ethers.provider.getBlock("latest")).timestamp;
     const release = now + 2;
 
@@ -131,7 +127,7 @@ describe("PaymentVault", function () {
     );
   });
 
-  it("should NOT allow non-payrollManager to create payments", async function () {
+  it("should NOT allow non-payrollManager to create payments", async () => {
     const now = (await ethers.provider.getBlock("latest")).timestamp;
     const release = now + 1000;
 
@@ -142,7 +138,7 @@ describe("PaymentVault", function () {
     ).to.be.revertedWith("Not payroll manager");
   });
 
-  it("should NOT allow non-payrollManager to call claimFor", async function () {
+  it("should NOT allow non-payrollManager to call claimFor", async () => {
     await expect(
       vault.connect(employee).claimFor(0, employee.address)
     ).to.be.revertedWith("Not payroll manager");

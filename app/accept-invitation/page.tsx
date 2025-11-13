@@ -194,14 +194,17 @@ function AcceptInvitationContent() {
       <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-[#2A190F]">Connect Your Wallet</CardTitle>
+            <CardTitle className="text-[#2A190F]">
+              Connect Your Wallet
+            </CardTitle>
             <CardDescription>
               You need to connect your wallet to accept the invitation
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-[#2A190F]/60 text-sm">
-              Please connect the wallet that received the invitation to continue.
+              Please connect the wallet that received the invitation to
+              continue.
             </p>
           </CardContent>
         </Card>
@@ -231,8 +234,8 @@ function AcceptInvitationContent() {
               {employeeAddressParam}
             </p>
             <p className="text-[#2A190F]/60 text-sm">
-              Please disconnect the current wallet and connect the correct wallet
-              to accept this invitation.
+              Please disconnect the current wallet and connect the correct
+              wallet to accept this invitation.
             </p>
           </CardContent>
         </Card>
@@ -308,7 +311,9 @@ function AcceptInvitationContent() {
               <XCircle className="h-5 w-5 text-red-600" />
               Inactive Invitation
             </CardTitle>
-            <CardDescription>This invitation is no longer active</CardDescription>
+            <CardDescription>
+              This invitation is no longer active
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-[#2A190F]/60 text-sm">
@@ -321,7 +326,7 @@ function AcceptInvitationContent() {
     );
   }
 
-  const decimals = 6; // USDT typically has 6 decimals
+  const decimals = 6; // MockUSDT has 6 decimals
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -342,7 +347,9 @@ function AcceptInvitationContent() {
 
           <div className="space-y-3 rounded-lg border border-[#2A190F]/10 p-4">
             <div className="flex justify-between">
-              <span className="text-[#2A190F]/60 text-sm">Amount per Payment</span>
+              <span className="text-[#2A190F]/60 text-sm">
+                Amount per Payment
+              </span>
               <span className="font-semibold text-[#2A190F]">
                 {formatAmount(invitationData.amount, decimals)}
               </span>
@@ -356,9 +363,7 @@ function AcceptInvitationContent() {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#2A190F]/60 text-sm">
-                Lock Period
-              </span>
+              <span className="text-[#2A190F]/60 text-sm">Lock Period</span>
               <span className="font-semibold text-[#2A190F]">
                 {Number(invitationData.lockPeriod) / (24 * 60 * 60)} days
               </span>
@@ -366,9 +371,7 @@ function AcceptInvitationContent() {
           </div>
 
           <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
-            <Badge className="bg-yellow-500/20 text-yellow-700">
-              Pending
-            </Badge>
+            <Badge className="bg-yellow-500/20 text-yellow-700">Pending</Badge>
             <p className="text-[#2A190F]/60 text-xs">
               Accept this invitation to start receiving payments
             </p>
