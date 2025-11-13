@@ -1,10 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-[#F2E2C4] pt-2 pb-6 px-2 md:py-12">
+    <section className="relative overflow-hidden bg-[#F2E2C4] px-2 pt-2 pb-6 md:py-12">
       <div className="container mx-auto px-4">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
           <div className="flex flex-col justify-center space-y-6">
@@ -17,7 +15,7 @@ export default function HeroSection() {
               smart contracts. Lock funds on-chain, automate payments, and earn
               yield while you wait.
             </p>
-            <div className="flex flex-col gap-4 sm:flex-row">
+            {/* <div className="flex flex-col gap-4 sm:flex-row">
               <Button
                 asChild
                 className="rounded-full bg-[#FCBA2E] px-8 py-6 font-bold text-[#2A190F] text-lg shadow-[0_4px_0_0_#DD840E] hover:bg-[#F1C644]"
@@ -32,7 +30,7 @@ export default function HeroSection() {
               >
                 Watch Demo
               </Button>
-            </div>
+            </div> */}
           </div>
           <div className="flex justify-center lg:justify-end">
             <Image

@@ -11,9 +11,9 @@ export default function FeaturesSection() {
     },
     {
       icon: TrendingUp,
-      title: "Earn Yield",
+      title: "Gasless Claims",
       description:
-        "Generate passive income on idle payroll funds automatically",
+        "Employees withdraw salaries without needing ETH for gas fees",
     },
     {
       icon: Zap,
@@ -24,12 +24,12 @@ export default function FeaturesSection() {
       icon: Lock,
       title: "Trustless System",
       description:
-        "No middlemen, no delays - just pure smart contract execution",
+        "No middlemen, no delays. Just pure smart contract execution",
     },
     {
       icon: Globe,
       title: "Global Payments",
-      description: "Pay anyone, anywhere with crypto - no borders, no banks",
+      description: "Pay anyone, anywhere with crypto. No borders, no banks",
     },
     {
       icon: Eye,

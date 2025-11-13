@@ -1,12 +1,10 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function CTASection() {
   return (
     <section className="bg-[#FCBA2E] pt-6">
       <div className="container mx-auto px-4">
-        <div className="flex max-w-5xl flex-col items-center justify-between gap-8 px-auto lg:flex-row">
+        <div className="flex max-w-5xl flex-1 flex-col items-center justify-between gap-8 px-auto lg:flex-row">
           <div className="flex-1">
             <h2 className="text-balance pb-4 font-bold text-3xl text-[#2A190F] md:text-4xl">
               Ready to revolutionize your payroll?
@@ -15,13 +13,6 @@ export default function CTASection() {
               Join the Web3 payroll revolution. Start automating payments and
               earning yield today.
             </p>
-            <Button
-              asChild
-              className="rounded-full bg-[#2A190F] px-8 py-6 font-bold text-lg text-white shadow-[0_4px_0_0_#DD840E] hover:bg-[#2A190F]/90"
-              size="lg"
-            >
-              <Link href="/employer/login">Get Started Free</Link>
-            </Button>
           </div>
           <div className="shrink-0">
             <Image

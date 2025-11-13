@@ -114,19 +114,19 @@ export default function InstallPrompt() {
     <Dialog onOpenChange={handleOpenChange} open={true}>
       <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Instalar Aplicación</DialogTitle>
+          <DialogTitle>Install App</DialogTitle>
           <DialogDescription>
             {isDeferredPromptAvailable
-              ? "Instala nuestra aplicación para una mejor experiencia. Tendrás acceso rápido desde tu pantalla de inicio."
-              : "Para instalar esta aplicación en tu dispositivo iOS, toca el botón de compartir y luego 'Agregar a pantalla de inicio'."}
+              ? "Install our application for a better experience. You'll have quick access from your home screen."
+              : "To install this app on your iOS device, tap the share button and then 'Add to Home Screen'."}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2">
           <Button onClick={handleCancelClick} type="button" variant="outline">
-            Ahora no
+            Not now
           </Button>
           <Button onClick={handleInstallClick} type="button">
-            Instalar
+            Install
           </Button>
         </DialogFooter>
       </DialogContent>
